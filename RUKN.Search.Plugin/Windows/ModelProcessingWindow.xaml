@@ -10,8 +10,10 @@
         mc:Ignorable="d"
         Width="380"
         Height="580"
+        MinWidth="380"
+        MinHeight="400"
         Title="Model Processing"
-        ResizeMode="CanResizeWithGrip"
+        ResizeMode="CanResize"
         Topmost="False"
         ShowInTaskbar="True"
         Style="{DynamicResource CustomWindowStyle}">
