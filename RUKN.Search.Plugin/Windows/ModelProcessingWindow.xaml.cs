@@ -19,13 +19,15 @@ namespace RUKN.Search.Plugin
             try
             {
                 string checkTop = SettingsConfig.GetValue("CheckOffsetTop");
-                if (checkTop != null) CheckOffsetTop.IsChecked = bool.Parse(checkTop);
+                if (checkTop != null && bool.TryParse(checkTop, out bool ct)) 
+                    CheckOffsetTop.IsChecked = ct;
 
                 string textTop = SettingsConfig.GetValue("TextOffsetTop");
                 if (textTop != null) TextOffsetTop.Text = textTop;
 
                 string checkBottom = SettingsConfig.GetValue("CheckOffsetBottom");
-                if (checkBottom != null) CheckOffsetBottom.IsChecked = bool.Parse(checkBottom);
+                if (checkBottom != null && bool.TryParse(checkBottom, out bool cb)) 
+                    CheckOffsetBottom.IsChecked = cb;
 
                 string textBottom = SettingsConfig.GetValue("TextOffsetBottom");
                 if (textBottom != null) TextOffsetBottom.Text = textBottom;
