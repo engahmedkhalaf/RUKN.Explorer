@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ApplicationPackage SchemaVersion="1.0"
-					AutodeskProduct="Naviswork"
+					AutodeskProduct="Navisworks"
 					Name="RUKN.Explorer"
 					Description="Select by Revit ID"
 					AppVersion="1.0.0.0"
