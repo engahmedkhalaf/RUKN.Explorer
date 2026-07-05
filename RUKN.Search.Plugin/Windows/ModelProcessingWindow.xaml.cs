@@ -11,6 +11,59 @@ namespace RUKN.Search.Plugin
         {
             InitializeComponent();
             PopulateModels();
+            LoadWindowSettings();
+        }
+
+        private void LoadWindowSettings()
+        {
+            try
+            {
+                string checkTop = SettingsConfig.GetValue("CheckOffsetTop");
+                if (checkTop != null) CheckOffsetTop.IsChecked = bool.Parse(checkTop);
+
+                string textTop = SettingsConfig.GetValue("TextOffsetTop");
+                if (textTop != null) TextOffsetTop.Text = textTop;
+
+                string checkBottom = SettingsConfig.GetValue("CheckOffsetBottom");
+                if (checkBottom != null) CheckOffsetBottom.IsChecked = bool.Parse(checkBottom);
+
+                string textBottom = SettingsConfig.GetValue("TextOffsetBottom");
+                if (textBottom != null) TextOffsetBottom.Text = textBottom;
+
+                string unit = SettingsConfig.GetValue("Unit");
+                if (unit != null)
+                {
+                    RadioMM.IsChecked = (unit == "mm");
+                    RadioCM.IsChecked = (unit == "cm");
+                    RadioM.IsChecked = (unit == "m");
+                    RadioFT.IsChecked = (unit == "ft");
+                }
+            }
+            catch (Exception) { }
+        }
+
+        private void SaveWindowSettings()
+        {
+            try
+            {
+                SettingsConfig.SetValue("CheckOffsetTop", CheckOffsetTop.IsChecked.ToString());
+                SettingsConfig.SetValue("TextOffsetTop", TextOffsetTop.Text);
+
+                SettingsConfig.SetValue("CheckOffsetBottom", CheckOffsetBottom.IsChecked.ToString());
+                SettingsConfig.SetValue("TextOffsetBottom", TextOffsetBottom.Text);
+
+                string unit = "m";
+                if (RadioMM.IsChecked == true) unit = "mm";
+                else if (RadioCM.IsChecked == true) unit = "cm";
+                else if (RadioFT.IsChecked == true) unit = "ft";
+                SettingsConfig.SetValue("Unit", unit);
+            }
+            catch (Exception) { }
+        }
+
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            SaveWindowSettings();
         }
 
         private void Border_MouseDown(object sender, MouseButtonEventArgs e)
@@ -43,6 +96,44 @@ namespace RUKN.Search.Plugin
             TextBlockStatus.Text = "Reading models from source...";
         }
 
+        private double ConvertToMeters(double value)
+        {
+            if (RadioMM.IsChecked == true)
+                return value / 1000.0;
+            if (RadioCM.IsChecked == true)
+                return value / 100.0;
+            if (RadioFT.IsChecked == true)
+                return value * 0.3048;
+            return value; // Meters
+        }
+
+        private string GetUnitText()
+        {
+            if (RadioMM.IsChecked == true) return "mm";
+            if (RadioCM.IsChecked == true) return "cm";
+            if (RadioFT.IsChecked == true) return "ft";
+            return "m";
+        }
+
+        private bool TryParseDouble(string text, out double value)
+        {
+            value = 0;
+            if (string.IsNullOrEmpty(text)) return false;
+
+            // Replace commas with dots and trim
+            string normalized = text.Replace(',', '.').Trim();
+            
+            // Try parsing using InvariantCulture (which expects dot as decimal separator)
+            if (double.TryParse(normalized, System.Globalization.NumberStyles.Any, 
+                System.Globalization.CultureInfo.InvariantCulture, out value))
+            {
+                return true;
+            }
+
+            // Fallback to default parsing (which uses local culture settings)
+            return double.TryParse(text.Trim(), out value);
+        }
+
         private void GenerateViewpoints_Click(object sender, RoutedEventArgs e)
         {
             if (ComboModel.SelectedItem == null)
@@ -56,29 +147,6 @@ namespace RUKN.Search.Plugin
             {
                 TextBlockStatus.Text = "Error: No models loaded.";
                 return;
-            }
-
-            // Read Offset
-            double offset = 0;
-            double.TryParse(TextOffset.Text, out offset);
-
-            // Convert offset to meters based on unit radio selection
-            double offsetInMeters = offset;
-            string unitText = "m";
-            if (RadioMM.IsChecked == true)
-            {
-                offsetInMeters = offset / 1000.0;
-                unitText = "mm";
-            }
-            else if (RadioCM.IsChecked == true)
-            {
-                offsetInMeters = offset / 100.0;
-                unitText = "cm";
-            }
-            else if (RadioFT.IsChecked == true)
-            {
-                offsetInMeters = offset * 0.3048;
-                unitText = "ft";
             }
 
             // Find checked levels
@@ -103,23 +171,51 @@ namespace RUKN.Search.Plugin
             try
             {
                 var doc = Autodesk.Navisworks.Api.Application.ActiveDocument;
+                string unitText = GetUnitText();
                 
                 foreach (string levelName in checkedLevels)
                 {
                     double? elevation = GetLevelElevation(selectedModel, levelName);
                     if (elevation.HasValue)
                     {
-                        double cutZ = elevation.Value + offsetInMeters;
+                        double? topZ = null;
+                        double? bottomZ = null;
+
+                        if (CheckOffsetTop.IsChecked == true && TryParseDouble(TextOffsetTop.Text, out double offsetTop))
+                        {
+                            topZ = elevation.Value + ConvertToMeters(offsetTop);
+                        }
+
+                        if (CheckOffsetBottom.IsChecked == true && TryParseDouble(TextOffsetBottom.Text, out double offsetBottom))
+                        {
+                            bottomZ = elevation.Value + ConvertToMeters(offsetBottom);
+                        }
 
                         // Apply the section cut using COM API
-                        ApplySectionCut(cutZ);
+                        ApplySectionCut(topZ, bottomZ);
 
                         // Capture current view state into a new viewpoint
                         Autodesk.Navisworks.Api.Viewpoint vp = doc.CurrentViewpoint.CreateCopy();
                         
                         // Create a SavedViewpoint
                         Autodesk.Navisworks.Api.SavedViewpoint savedVp = new Autodesk.Navisworks.Api.SavedViewpoint(vp);
-                        savedVp.DisplayName = $"{selectedModel} - {levelName}" + (offset != 0 ? $" + {offset}{unitText}" : "");
+                        
+                        // Determine display name with top/bottom offset details
+                        string displayName = $"{selectedModel} - {levelName}";
+                        var details = new System.Collections.Generic.List<string>();
+                        if (topZ.HasValue && TryParseDouble(TextOffsetTop.Text, out double ot) && ot != 0)
+                        {
+                            details.Add($"Top Z: {(ot > 0 ? "+" : "")}{ot}{unitText}");
+                        }
+                        if (bottomZ.HasValue && TryParseDouble(TextOffsetBottom.Text, out double ob) && ob != 0)
+                        {
+                            details.Add($"Bottom Z: {(ob > 0 ? "+" : "")}{ob}{unitText}");
+                        }
+                        if (details.Count > 0)
+                        {
+                            displayName += $" ({string.Join(", ", details)})";
+                        }
+                        savedVp.DisplayName = displayName;
 
                         // Save to document
                         doc.SavedViewpoints.AddCopy(savedVp);
@@ -173,7 +269,7 @@ namespace RUKN.Search.Plugin
             return null;
         }
 
-        private void ApplySectionCut(double cutZ)
+        private void ApplySectionCut(double? topZ, double? bottomZ)
         {
             try
             {
@@ -181,28 +277,59 @@ namespace RUKN.Search.Plugin
                 var curView = state.CurrentView;
                 var clipColl = (Autodesk.Navisworks.Api.Interop.ComApi.InwClippingPlaneColl2)curView.ClippingPlanes();
 
-                // Make sure we have at least one plane
-                if (clipColl.Count == 0)
+                // Make sure we have at least two planes
+                if (clipColl.Count < 1)
                 {
                     clipColl.CreatePlane(1);
                 }
+                if (clipColl.Count < 2)
+                {
+                    clipColl.CreatePlane(2);
+                }
 
                 var plane1 = (Autodesk.Navisworks.Api.Interop.ComApi.InwOaClipPlane)clipColl[1];
-                
-                // Normal vector pointing down (0, 0, -1) to cut the top off
-                var normal = (Autodesk.Navisworks.Api.Interop.ComApi.InwLUnitVec3f)state.ObjectFactory(
-                    Autodesk.Navisworks.Api.Interop.ComApi.nwEObjectType.eObjectType_nwLUnitVec3f, null, null);
-                normal.SetValue(0, 0, -1);
+                var plane2 = (Autodesk.Navisworks.Api.Interop.ComApi.InwOaClipPlane)clipColl[2];
 
-                var plane = (Autodesk.Navisworks.Api.Interop.ComApi.InwLPlane3f)state.ObjectFactory(
-                    Autodesk.Navisworks.Api.Interop.ComApi.nwEObjectType.eObjectType_nwLPlane3f, null, null);
-                
-                // To cut at height cutZ with normal (0,0,-1), distance is -cutZ
-                plane.SetValue(normal, -cutZ);
+                // Configure Plane 1 (Top Cut)
+                if (topZ.HasValue)
+                {
+                    // Normal vector pointing down (0, 0, -1) to cut the top off
+                    var normal = (Autodesk.Navisworks.Api.Interop.ComApi.InwLUnitVec3f)state.ObjectFactory(
+                        Autodesk.Navisworks.Api.Interop.ComApi.nwEObjectType.eObjectType_nwLUnitVec3f, null, null);
+                    normal.SetValue(0, 0, -1);
 
-                plane1.Plane = plane;
-                plane1.Enabled = true;
-                
+                    var plane = (Autodesk.Navisworks.Api.Interop.ComApi.InwLPlane3f)state.ObjectFactory(
+                        Autodesk.Navisworks.Api.Interop.ComApi.nwEObjectType.eObjectType_nwLPlane3f, null, null);
+                    plane.SetValue(normal, -topZ.Value);
+
+                    plane1.Plane = plane;
+                    plane1.Enabled = true;
+                }
+                else
+                {
+                    plane1.Enabled = false;
+                }
+
+                // Configure Plane 2 (Bottom Cut)
+                if (bottomZ.HasValue)
+                {
+                    // Normal vector pointing up (0, 0, 1) to cut the bottom off
+                    var normal = (Autodesk.Navisworks.Api.Interop.ComApi.InwLUnitVec3f)state.ObjectFactory(
+                        Autodesk.Navisworks.Api.Interop.ComApi.nwEObjectType.eObjectType_nwLUnitVec3f, null, null);
+                    normal.SetValue(0, 0, 1);
+
+                    var plane = (Autodesk.Navisworks.Api.Interop.ComApi.InwLPlane3f)state.ObjectFactory(
+                        Autodesk.Navisworks.Api.Interop.ComApi.nwEObjectType.eObjectType_nwLPlane3f, null, null);
+                    plane.SetValue(normal, bottomZ.Value);
+
+                    plane2.Plane = plane;
+                    plane2.Enabled = true;
+                }
+                else
+                {
+                    plane2.Enabled = false;
+                }
+
                 // Save changes back to the current view
                 state.CurrentView = curView;
             }

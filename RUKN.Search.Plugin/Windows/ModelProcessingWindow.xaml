@@ -9,13 +9,14 @@
         Background="{x:Null}"
         mc:Ignorable="d"
         Width="380"
-        Height="580"
+        Height="640"
         MinWidth="380"
         MinHeight="400"
         Title="Model Processing"
         ResizeMode="CanResize"
         Topmost="False"
         ShowInTaskbar="True"
+        Closing="Window_Closing"
         Style="{DynamicResource CustomWindowStyle}">
 
     <Window.InputBindings>
@@ -115,27 +116,50 @@
                     <Grid Margin="10,0,0,15">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="120"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
 
-                        <!-- Offset Plane -->
-                        <TextBlock Text="Offset Plane:" VerticalAlignment="Center" Margin="0,0,0,8" Grid.Row="0" Grid.Column="0"/>
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8" Grid.Row="0" Grid.Column="1">
-                            <TextBox Name="TextOffset" Text="0.000" Width="80" Height="28" Padding="5,2" VerticalContentAlignment="Center" HorizontalContentAlignment="Right" Margin="0,0,5,0"/>
-                            <TextBlock Text="[m]" VerticalAlignment="Center" Foreground="{DynamicResource SecondaryGray}"/>
-                        </StackPanel>
-
                         <!-- Units -->
-                        <TextBlock Text="Units:" VerticalAlignment="Top" Margin="0,5,0,0" Grid.Row="1" Grid.Column="0"/>
-                        <StackPanel Orientation="Horizontal" Grid.Row="1" Grid.Column="1" Margin="0,5,0,0">
+                        <TextBlock Text="Units:" VerticalAlignment="Top" Margin="0,5,0,0" Grid.Row="0" Grid.Column="0"/>
+                        <StackPanel Orientation="Horizontal" Grid.Row="0" Grid.Column="1" Margin="0,5,0,0">
                             <RadioButton Name="RadioMM" GroupName="UnitGroup" Content="mm" Margin="0,0,15,0" />
                             <RadioButton Name="RadioCM" GroupName="UnitGroup" Content="cm" Margin="0,0,15,0" />
                             <RadioButton Name="RadioM" GroupName="UnitGroup" Content="m" IsChecked="True" Margin="0,0,15,0" />
                             <RadioButton Name="RadioFT" GroupName="UnitGroup" Content="ft" />
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Section Cut Group -->
+                    <TextBlock Text="Section Cut" FontWeight="Bold" Foreground="#18263c" FontSize="13" Margin="0,0,0,5"/>
+                    <Border BorderBrush="{DynamicResource SecondaryGray}" BorderThickness="0,0,0,1" Opacity="0.3" Margin="0,0,0,10"/>
+                    <Grid Margin="10,0,0,15">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Offset Top Z -->
+                        <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,10,0">
+                            <CheckBox Name="CheckOffsetTop" Content="Offset Top Z" IsChecked="True" VerticalAlignment="Center" Margin="0,0,0,5"/>
+                            <StackPanel Orientation="Horizontal" Margin="20,0,0,0">
+                                <TextBlock Text="Amount:" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                                <TextBox Name="TextOffsetTop" Text="-2" Width="60" Height="28" Padding="5,2" VerticalContentAlignment="Center" HorizontalContentAlignment="Right"/>
+                            </StackPanel>
+                        </StackPanel>
+
+                        <!-- Offset Bottom Z -->
+                        <StackPanel Grid.Row="0" Grid.Column="1" Margin="0,0,10,0">
+                            <CheckBox Name="CheckOffsetBottom" Content="Offset Bottom Z" IsChecked="True" VerticalAlignment="Center" Margin="0,0,0,5"/>
+                            <StackPanel Orientation="Horizontal" Margin="20,0,0,0">
+                                <TextBlock Text="Amount:" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                                <TextBox Name="TextOffsetBottom" Text="-5" Width="60" Height="28" Padding="5,2" VerticalContentAlignment="Center" HorizontalContentAlignment="Right"/>
+                            </StackPanel>
                         </StackPanel>
                     </Grid>
 

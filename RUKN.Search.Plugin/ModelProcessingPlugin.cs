@@ -23,6 +23,8 @@ namespace RUKN.Search.Plugin
                 var helper = new WindowInteropHelper(_activeWindow);
                 helper.Owner = hwnd;
 
+                System.Windows.Forms.Integration.ElementHost.EnableModelessKeyboardInterop(_activeWindow);
+
                 _activeWindow.Show();
             }
             return 0;
