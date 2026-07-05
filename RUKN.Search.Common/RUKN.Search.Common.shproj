@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>fe40b4f6-4656-42af-bcf2-b168567610cd</ProjectGuid>
+    <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>
+  </PropertyGroup>
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\CodeSharing\Microsoft.CodeSharing.Common.Default.props" />
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\CodeSharing\Microsoft.CodeSharing.Common.props" />
+  <PropertyGroup />
+  <ItemGroup>
+    <Compile Include="Application\CommonCommandHandlerPlugin.cs" />
+    <Compile Include="Application\IndentityInformation.cs" />
+    <Compile Include="PluginRibbon.cs" />
+    <Compile Include="Utils\PluginBuilder.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Page Include="en-US\PluginRibbon.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+
+    <Content Include="Images\ElementID_16.ico" />
+    <Content Include="Images\ElementID_32.png" />
+    <Content Include="Images\SelectByRevitId.png" />
+    <Content Include="PackageContents.xml" />
+  </ItemGroup>
+  <Import Project="RUKN.Search.Common.projitems" Label="Shared" />
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\CodeSharing\Microsoft.CodeSharing.CSharp.targets" />
+</Project>

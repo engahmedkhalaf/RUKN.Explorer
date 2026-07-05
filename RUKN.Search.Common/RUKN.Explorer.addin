@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<NavisworksAddIns>
+	<AddIn Type="Application">
+		<Name>RUKN.Explorer</Name>
+		<Assembly>RUKN.Explorer\RUKN.Explorer.dll</Assembly>
+		<FullClassName>Rukn.Navisworks.Plugin.Common.PluginRibbon</FullClassName>
+		<Text>RUKN.Explorer</Text>
+		<Description>RUKN.Explorer</Description>
+		<VisibilityMode>AlwaysVisible</VisibilityMode>
+		<AddInId>
+			C16DC27F-B025-4E56-B850-C6E4126E2CF2
+		</AddInId>
+		<VendorId>EVRS</VendorId>
+		<VendorDescription>Rukn, www.Rukn.com</VendorDescription>
+	</AddIn>
+</NavisworksAddIns>

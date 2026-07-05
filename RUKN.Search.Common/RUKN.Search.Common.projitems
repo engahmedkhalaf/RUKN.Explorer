@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <MSBuildAllProjects Condition="'$(MSBuildVersion)' == '' Or '$(MSBuildVersion)' &lt; '16.0'">$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <SharedGUID>fe40b4f6-4656-42af-bcf2-b168567610cd</SharedGUID>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <Import_RootNamespace>RUKN.Search.Common</Import_RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)Application\CommonCommandHandlerPlugin.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Application\IndentityInformation.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)PluginRibbon.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utils\PluginBuilder.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Page Include="$(MSBuildThisFileDirectory)en-US\PluginRibbon.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="$(MSBuildThisFileDirectory)Images\ElementID_16.ico" />
+    <Content Include="$(MSBuildThisFileDirectory)Images\ElementID_32.png" />
+    <Content Include="$(MSBuildThisFileDirectory)PackageContents.xml" />
+  </ItemGroup>
+</Project>

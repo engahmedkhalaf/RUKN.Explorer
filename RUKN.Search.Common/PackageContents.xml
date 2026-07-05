@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ApplicationPackage SchemaVersion="1.0"
+					AutodeskProduct="Navisworks"
+					Name="RUKN.Explorer"
+					Description="Select by Revit ID"
+					AppVersion="1.0.0.0"
+					ProductType="Application"
+					SupportedLocales="Enu"
+					AppNameSpace="appstore.exchange.autodesk.com"
+					OnlineDocumentation=""
+					Author="Rukn"
+					ProductCode="{E0766063-07EF-4B00-BCD8-414133AE53C9}"
+					UpgradeCode="{8D8AB66D-50C4-4823-81CB-C066A6D001A4}"
+					FriendlyVersion="1.0.0.0"
+					HelpFile=""
+					Icon="">
+	<CompanyDetails Name="RuknBIM" Url="https://www.ruknbim.com/"  Email="support@ruknbim.com" Phone=" " />
+	<Components Description="2024">
+		<RuntimeRequirements OS="Win64" Platform="NAVMAN|NAVSIM" SeriesMin="Nw21" SeriesMax="Nw21" />
+		<ComponentEntry AppName="Select by Revit ID for Autodesk® Navisworks®" AppType="ManagedPlugin" Version="1.0.0.0" ModuleName="./Contents/dlls/2024/RUKN.Explorer/RUKN.Explorer.dll" AppDescription="Select by Revit ID." />
+	</Components>
+</ApplicationPackage>
