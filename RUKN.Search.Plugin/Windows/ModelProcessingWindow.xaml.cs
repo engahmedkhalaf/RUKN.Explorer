@@ -434,11 +434,11 @@ namespace RUKN.Search.Plugin
                                             return propElevation.Value;
                                         }
 
-                                        // 2. Fallback to bounding box Min Z
+                                        // 2. Fallback to bounding box Center Z
                                         var bbox = child.BoundingBox();
                                         if (bbox != null)
                                         {
-                                            return bbox.Min.Z;
+                                            return (bbox.Min.Z + bbox.Max.Z) / 2.0;
                                         }
                                     }
                                 }
