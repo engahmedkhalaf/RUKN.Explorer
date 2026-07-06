@@ -7,6 +7,8 @@ namespace RUKN.Search.Plugin
 {
     public partial class ModelProcessingWindow : Window
     {
+        private string _previousUnit = "m";
+
         public ModelProcessingWindow()
         {
             InitializeComponent();
@@ -35,6 +37,7 @@ namespace RUKN.Search.Plugin
                 string unit = SettingsConfig.GetValue("Unit");
                 if (unit != null)
                 {
+                    _previousUnit = unit;
                     RadioMM.IsChecked = (unit == "mm");
                     RadioCM.IsChecked = (unit == "cm");
                     RadioM.IsChecked = (unit == "m");
@@ -61,6 +64,48 @@ namespace RUKN.Search.Plugin
                 SettingsConfig.SetValue("Unit", unit);
             }
             catch (Exception) { }
+        }
+
+        private void Unit_Checked(object sender, RoutedEventArgs e)
+        {
+            if (!this.IsLoaded) return;
+
+            string newUnit = "m";
+            if (RadioMM.IsChecked == true) newUnit = "mm";
+            else if (RadioCM.IsChecked == true) newUnit = "cm";
+            else if (RadioFT.IsChecked == true) newUnit = "ft";
+
+            if (newUnit == _previousUnit) return;
+
+            // Convert Top Offset
+            if (TryParseDouble(TextOffsetTop.Text, out double ot))
+            {
+                double converted = ConvertValue(ot, _previousUnit, newUnit);
+                TextOffsetTop.Text = (converted % 1 == 0) ? converted.ToString("F0") : converted.ToString("0.##");
+            }
+
+            // Convert Bottom Offset
+            if (TryParseDouble(TextOffsetBottom.Text, out double ob))
+            {
+                double converted = ConvertValue(ob, _previousUnit, newUnit);
+                TextOffsetBottom.Text = (converted % 1 == 0) ? converted.ToString("F0") : converted.ToString("0.##");
+            }
+
+            _previousUnit = newUnit;
+        }
+
+        private double ConvertValue(double value, string fromUnit, string toUnit)
+        {
+            // baseline is meters
+            double meters = value;
+            if (fromUnit == "mm") meters = value / 1000.0;
+            else if (fromUnit == "cm") meters = value / 100.0;
+            else if (fromUnit == "ft") meters = value * 0.3048;
+
+            if (toUnit == "mm") return meters * 1000.0;
+            if (toUnit == "cm") return meters * 100.0;
+            if (toUnit == "ft") return meters / 0.3048;
+            return meters;
         }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)

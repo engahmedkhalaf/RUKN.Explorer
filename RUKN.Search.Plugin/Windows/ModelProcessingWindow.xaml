@@ -125,10 +125,10 @@
                         <!-- Units -->
                         <TextBlock Text="Units:" VerticalAlignment="Top" Margin="0,5,0,0" Grid.Row="0" Grid.Column="0"/>
                         <StackPanel Orientation="Horizontal" Grid.Row="0" Grid.Column="1" Margin="0,5,0,0">
-                            <RadioButton Name="RadioMM" GroupName="UnitGroup" Content="mm" Margin="0,0,15,0" />
-                            <RadioButton Name="RadioCM" GroupName="UnitGroup" Content="cm" Margin="0,0,15,0" />
-                            <RadioButton Name="RadioM" GroupName="UnitGroup" Content="m" IsChecked="True" Margin="0,0,15,0" />
-                            <RadioButton Name="RadioFT" GroupName="UnitGroup" Content="ft" />
+                            <RadioButton Name="RadioMM" GroupName="UnitGroup" Content="mm" Margin="0,0,15,0" Checked="Unit_Checked" />
+                            <RadioButton Name="RadioCM" GroupName="UnitGroup" Content="cm" Margin="0,0,15,0" Checked="Unit_Checked" />
+                            <RadioButton Name="RadioM" GroupName="UnitGroup" Content="m" IsChecked="True" Margin="0,0,15,0" Checked="Unit_Checked" />
+                            <RadioButton Name="RadioFT" GroupName="UnitGroup" Content="ft" Checked="Unit_Checked" />
                         </StackPanel>
                     </Grid>
 
