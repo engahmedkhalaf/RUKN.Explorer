@@ -215,11 +215,18 @@ namespace RUKN.Search.Plugin
             TextBlockStatus.Text = $"Generating {checkedLevels.Count} viewpoint(s)...";
 
             int generatedCount = 0;
+            Autodesk.Navisworks.Api.ModelItemCollection originalSelection = null;
             try
             {
                 var doc = Autodesk.Navisworks.Api.Application.ActiveDocument;
                 string unitText = GetUnitText();
                 var allElevations = GetAllLevelElevations(selectedModel);
+
+                // Save current selection to restore at the end
+                if (doc != null && doc.CurrentSelection != null && doc.CurrentSelection.SelectedItems != null)
+                {
+                    originalSelection = new Autodesk.Navisworks.Api.ModelItemCollection(doc.CurrentSelection.SelectedItems);
+                }
                 
                 foreach (string levelName in checkedLevels)
                 {
@@ -272,6 +279,15 @@ namespace RUKN.Search.Plugin
                         // Apply the section cut using COM API
                         ApplySectionCut(topZ, bottomZ);
 
+                        // Select the level's ModelItem before capturing the viewpoint
+                        var levelItem = GetLevelModelItem(selectedModel, levelName);
+                        if (levelItem != null && doc != null && doc.CurrentSelection != null)
+                        {
+                            var collection = new Autodesk.Navisworks.Api.ModelItemCollection();
+                            collection.Add(levelItem);
+                            doc.CurrentSelection.CopyFrom(collection);
+                        }
+
                         // Capture current view state into a new viewpoint
                         Autodesk.Navisworks.Api.Viewpoint vp = doc.CurrentViewpoint.CreateCopy();
                         
@@ -312,7 +328,51 @@ namespace RUKN.Search.Plugin
             {
                 // Reset sectioning on the current live view to avoid leaving the screen cut
                 ClearSectioning();
+
+                // Restore original selection
+                if (originalSelection != null)
+                {
+                    try
+                    {
+                        var doc = Autodesk.Navisworks.Api.Application.ActiveDocument;
+                        if (doc != null && doc.CurrentSelection != null)
+                        {
+                            doc.CurrentSelection.CopyFrom(originalSelection);
+                        }
+                    }
+                    catch (Exception) { }
+                }
             }
+        }
+
+        private Autodesk.Navisworks.Api.ModelItem GetLevelModelItem(string selectedModelName, string levelNameName)
+        {
+            try
+            {
+                if (Autodesk.Navisworks.Api.Application.ActiveDocument != null)
+                {
+                    foreach (Autodesk.Navisworks.Api.Model model in Autodesk.Navisworks.Api.Application.ActiveDocument.Models)
+                    {
+                        string modelName = model.RootItem != null ? model.RootItem.DisplayName : System.IO.Path.GetFileNameWithoutExtension(model.SourceFileName);
+                        if (modelName == selectedModelName)
+                        {
+                            if (model.RootItem != null)
+                            {
+                                foreach (Autodesk.Navisworks.Api.ModelItem child in model.RootItem.Children)
+                                {
+                                    if (child.DisplayName == levelNameName)
+                                    {
+                                        return child;
+                                    }
+                                }
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+            catch (Exception) { }
+            return null;
         }
 
         private double? GetLevelElevation(string selectedModelName, string levelNameName)
