@@ -191,6 +191,7 @@
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
 
                 <Button Style="{DynamicResource ApplyButtonStyle}" 
@@ -211,15 +212,22 @@
                         Content="Save Viewpoints" 
                         Click="SaveViewpoints_Click"
                         Height="34" 
-                        Margin="0,0,5,0"
+                        Margin="0,0,5,8"
                         Grid.Row="1" Grid.Column="0"/>
 
                 <Button Style="{DynamicResource ApplyButtonStyle}" 
                         Content="Export Data" 
                         Click="ExportData_Click"
                         Height="34" 
-                        Margin="5,0,0,0"
+                        Margin="5,0,0,8"
                         Grid.Row="1" Grid.Column="1"/>
+
+                <Button Style="{DynamicResource ApplyButtonStyle}" 
+                        Content="Reset to Full Mode" 
+                        Click="ResetFullMode_Click"
+                        Height="34" 
+                        Margin="0,0,0,0"
+                        Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2"/>
             </Grid>
 
             <!-- Status Bar -->

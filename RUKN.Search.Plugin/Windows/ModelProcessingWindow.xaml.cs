@@ -498,6 +498,19 @@ namespace RUKN.Search.Plugin
             TextBlockStatus.Text = "Exporting data...";
         }
 
+        private void ResetFullMode_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                ClearSectioning();
+                TextBlockStatus.Text = "Reset to Full Mode (Section Cuts Cleared).";
+            }
+            catch (Exception ex)
+            {
+                TextBlockStatus.Text = "Error: " + ex.Message;
+            }
+        }
+
         private void PopulateModels()
         {
             ComboModel.Items.Clear();
