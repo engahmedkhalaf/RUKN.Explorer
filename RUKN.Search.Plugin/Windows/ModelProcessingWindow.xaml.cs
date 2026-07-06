@@ -478,9 +478,26 @@ namespace RUKN.Search.Plugin
             catch (Exception) { }
         }
 
-        private void SaveViewpoints_Click(object sender, RoutedEventArgs e)
+        private void ClearSavedViews_Click(object sender, RoutedEventArgs e)
         {
-            TextBlockStatus.Text = "Viewpoints are already saved during generation.";
+            try
+            {
+                var doc = Autodesk.Navisworks.Api.Application.ActiveDocument;
+                if (doc != null && doc.SavedViewpoints != null)
+                {
+                    var result = MessageBox.Show("Are you sure you want to delete all saved viewpoints?", "Confirm Delete", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+                    if (result == MessageBoxResult.Yes)
+                    {
+                        doc.SavedViewpoints.Clear();
+                        TextBlockStatus.Text = "Successfully cleared all saved viewpoints.";
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                TextBlockStatus.Text = "Error clearing viewpoints: " + ex.Message;
+                MessageBox.Show("Failed to clear viewpoints: " + ex.Message);
+            }
         }
 
         private void ExportData_Click(object sender, RoutedEventArgs e)

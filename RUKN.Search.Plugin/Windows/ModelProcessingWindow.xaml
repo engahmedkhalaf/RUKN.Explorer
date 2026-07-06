@@ -209,8 +209,8 @@
                         Grid.Row="0" Grid.Column="1"/>
 
                 <Button Style="{DynamicResource ApplyButtonStyle}" 
-                        Content="Save Viewpoints" 
-                        Click="SaveViewpoints_Click"
+                        Content="Clear Saved Views" 
+                        Click="ClearSavedViews_Click"
                         Height="34" 
                         Margin="0,0,5,8"
                         Grid.Row="1" Grid.Column="0"/>
