@@ -375,6 +375,41 @@ namespace RUKN.Search.Plugin
             return null;
         }
 
+        private double? GetLevelElevationFromProperties(Autodesk.Navisworks.Api.ModelItem item)
+        {
+            if (item == null) return null;
+
+            try
+            {
+                foreach (Autodesk.Navisworks.Api.PropertyCategory category in item.PropertyCategories)
+                {
+                    foreach (Autodesk.Navisworks.Api.DataProperty prop in category.Properties)
+                    {
+                        if (prop.DisplayName.Equals("Elevation", StringComparison.OrdinalIgnoreCase) ||
+                            prop.Name.Equals("Elevation", StringComparison.OrdinalIgnoreCase) ||
+                            prop.DisplayName.Equals("Elevation Height", StringComparison.OrdinalIgnoreCase))
+                        {
+                            var val = prop.Value;
+                            if (val.IsDouble)
+                            {
+                                return val.ToDouble();
+                            }
+                            else if (val.IsDisplayString)
+                            {
+                                if (double.TryParse(val.ToDisplayString(), out double d))
+                                {
+                                    return d;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception) { }
+
+            return null;
+        }
+
         private double? GetLevelElevation(string selectedModelName, string levelNameName)
         {
             try
@@ -392,6 +427,14 @@ namespace RUKN.Search.Plugin
                                 {
                                     if (child.DisplayName == levelNameName)
                                     {
+                                        // 1. Try to get exact elevation from properties first
+                                        double? propElevation = GetLevelElevationFromProperties(child);
+                                        if (propElevation.HasValue)
+                                        {
+                                            return propElevation.Value;
+                                        }
+
+                                        // 2. Fallback to bounding box Min Z
                                         var bbox = child.BoundingBox();
                                         if (bbox != null)
                                         {
