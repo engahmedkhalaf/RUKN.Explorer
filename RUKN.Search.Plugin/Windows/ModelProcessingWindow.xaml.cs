@@ -225,15 +225,17 @@ namespace RUKN.Search.Plugin
                     }
                 }
 
-                // Reset sectioning on the current live view to avoid leaving the screen cut
-                ClearSectioning();
-
                 TextBlockStatus.Text = $"Successfully generated {generatedCount} viewpoint(s)!";
             }
             catch (Exception ex)
             {
                 TextBlockStatus.Text = "Error: " + ex.Message;
                 MessageBox.Show("Viewpoint generation failed: " + ex.Message);
+            }
+            finally
+            {
+                // Reset sectioning on the current live view to avoid leaving the screen cut
+                ClearSectioning();
             }
         }
 
@@ -277,7 +279,9 @@ namespace RUKN.Search.Plugin
             {
                 var state = Autodesk.Navisworks.Api.ComApi.ComApiBridge.State;
                 var curView = state.CurrentView;
+                if (curView == null) return;
                 var clipColl = (Autodesk.Navisworks.Api.Interop.ComApi.InwClippingPlaneColl2)curView.ClippingPlanes();
+                if (clipColl == null) return;
 
                 // Make sure we have at least two planes
                 if (clipColl.Count < 1)
@@ -293,7 +297,7 @@ namespace RUKN.Search.Plugin
                 var plane2 = (Autodesk.Navisworks.Api.Interop.ComApi.InwOaClipPlane)clipColl[2];
 
                 // Configure Plane 1 (Top Cut)
-                if (topZ.HasValue)
+                if (topZ.HasValue && plane1 != null)
                 {
                     // Normal vector pointing down (0, 0, -1) to cut the top off
                     var normal = (Autodesk.Navisworks.Api.Interop.ComApi.InwLUnitVec3f)state.ObjectFactory(
@@ -307,13 +311,13 @@ namespace RUKN.Search.Plugin
                     plane1.Plane = plane;
                     plane1.Enabled = true;
                 }
-                else
+                else if (plane1 != null)
                 {
                     plane1.Enabled = false;
                 }
 
                 // Configure Plane 2 (Bottom Cut)
-                if (bottomZ.HasValue)
+                if (bottomZ.HasValue && plane2 != null)
                 {
                     // Normal vector pointing up (0, 0, 1) to cut the bottom off
                     var normal = (Autodesk.Navisworks.Api.Interop.ComApi.InwLUnitVec3f)state.ObjectFactory(
@@ -327,7 +331,7 @@ namespace RUKN.Search.Plugin
                     plane2.Plane = plane;
                     plane2.Enabled = true;
                 }
-                else
+                else if (plane2 != null)
                 {
                     plane2.Enabled = false;
                 }
@@ -347,11 +351,16 @@ namespace RUKN.Search.Plugin
             {
                 var state = Autodesk.Navisworks.Api.ComApi.ComApiBridge.State;
                 var curView = state.CurrentView;
+                if (curView == null) return;
                 var clipColl = (Autodesk.Navisworks.Api.Interop.ComApi.InwClippingPlaneColl2)curView.ClippingPlanes();
+                if (clipColl == null) return;
                 for (int i = 1; i <= clipColl.Count; i++)
                 {
                     var plane = (Autodesk.Navisworks.Api.Interop.ComApi.InwOaClipPlane)clipColl[i];
-                    plane.Enabled = false;
+                    if (plane != null)
+                    {
+                        plane.Enabled = false;
+                    }
                 }
                 state.CurrentView = curView;
             }
