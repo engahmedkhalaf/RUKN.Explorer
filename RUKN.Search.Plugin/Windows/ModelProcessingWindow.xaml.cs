@@ -174,6 +174,7 @@ namespace RUKN.Search.Plugin
             {
                 var doc = Autodesk.Navisworks.Api.Application.ActiveDocument;
                 string unitText = GetUnitText();
+                var allElevations = GetAllLevelElevations(selectedModel);
                 
                 foreach (string levelName in checkedLevels)
                 {
@@ -183,14 +184,44 @@ namespace RUKN.Search.Plugin
                         double? topZ = null;
                         double? bottomZ = null;
 
+                        // 1. Calculate Bottom Z
+                        if (CheckOffsetBottom.IsChecked == true && TryParseDouble(TextOffsetBottom.Text, out double offsetBottom))
+                        {
+                            bottomZ = elevation.Value + ConvertToMeters(offsetBottom);
+                        }
+                        else
+                        {
+                            // Default: Cut exactly at the floor level
+                            bottomZ = elevation.Value;
+                        }
+
+                        // 2. Calculate Top Z
                         if (CheckOffsetTop.IsChecked == true && TryParseDouble(TextOffsetTop.Text, out double offsetTop))
                         {
                             topZ = elevation.Value + ConvertToMeters(offsetTop);
                         }
-
-                        if (CheckOffsetBottom.IsChecked == true && TryParseDouble(TextOffsetBottom.Text, out double offsetBottom))
+                        else
                         {
-                            bottomZ = elevation.Value + ConvertToMeters(offsetBottom);
+                            // Default: Find the next level's elevation to slice only this floor
+                            double? nextElevation = null;
+                            foreach (double el in allElevations)
+                            {
+                                if (el > elevation.Value + 0.01)
+                                {
+                                    nextElevation = el;
+                                    break;
+                                }
+                            }
+
+                            if (nextElevation.HasValue)
+                            {
+                                topZ = nextElevation.Value;
+                            }
+                            else
+                            {
+                                // Top floor fallback: current elevation + 4.0 meters
+                                topZ = elevation.Value + 4.0;
+                            }
                         }
 
                         // Apply the section cut using COM API
@@ -205,11 +236,11 @@ namespace RUKN.Search.Plugin
                         // Determine display name with top/bottom offset details
                         string displayName = $"{selectedModel} - {levelName}";
                         var details = new System.Collections.Generic.List<string>();
-                        if (topZ.HasValue && TryParseDouble(TextOffsetTop.Text, out double ot) && ot != 0)
+                        if (CheckOffsetTop.IsChecked == true && TryParseDouble(TextOffsetTop.Text, out double ot) && ot != 0)
                         {
                             details.Add($"Top Z: {(ot > 0 ? "+" : "")}{ot}{unitText}");
                         }
-                        if (bottomZ.HasValue && TryParseDouble(TextOffsetBottom.Text, out double ob) && ob != 0)
+                        if (CheckOffsetBottom.IsChecked == true && TryParseDouble(TextOffsetBottom.Text, out double ob) && ob != 0)
                         {
                             details.Add($"Bottom Z: {(ob > 0 ? "+" : "")}{ob}{unitText}");
                         }
@@ -271,6 +302,51 @@ namespace RUKN.Search.Plugin
             }
             catch (Exception) { }
             return null;
+        }
+
+        private System.Collections.Generic.List<double> GetAllLevelElevations(string selectedModelName)
+        {
+            var elevations = new System.Collections.Generic.List<double>();
+            try
+            {
+                if (Autodesk.Navisworks.Api.Application.ActiveDocument != null)
+                {
+                    foreach (Autodesk.Navisworks.Api.Model model in Autodesk.Navisworks.Api.Application.ActiveDocument.Models)
+                    {
+                        string modelName = model.RootItem != null ? model.RootItem.DisplayName : System.IO.Path.GetFileNameWithoutExtension(model.SourceFileName);
+                        if (modelName == selectedModelName)
+                        {
+                            if (model.RootItem != null)
+                            {
+                                foreach (Autodesk.Navisworks.Api.ModelItem child in model.RootItem.Children)
+                                {
+                                    var bbox = child.BoundingBox();
+                                    if (bbox != null)
+                                    {
+                                        elevations.Add(bbox.Min.Z);
+                                    }
+                                }
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+            catch (Exception) { }
+
+            // Sort ascending
+            elevations.Sort();
+
+            // Remove duplicates
+            var uniqueElevations = new System.Collections.Generic.List<double>();
+            foreach (double el in elevations)
+            {
+                if (uniqueElevations.Count == 0 || Math.Abs(uniqueElevations[uniqueElevations.Count - 1] - el) > 0.001)
+                {
+                    uniqueElevations.Add(el);
+                }
+            }
+            return uniqueElevations;
         }
 
         private void ApplySectionCut(double? topZ, double? bottomZ)
