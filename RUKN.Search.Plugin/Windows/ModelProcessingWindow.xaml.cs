@@ -354,25 +354,15 @@ namespace RUKN.Search.Plugin
             var elevations = new System.Collections.Generic.List<double>();
             try
             {
-                if (Autodesk.Navisworks.Api.Application.ActiveDocument != null)
+                foreach (var child in PanelLevels.Children)
                 {
-                    foreach (Autodesk.Navisworks.Api.Model model in Autodesk.Navisworks.Api.Application.ActiveDocument.Models)
+                    if (child is CheckBox cb)
                     {
-                        string modelName = model.RootItem != null ? model.RootItem.DisplayName : System.IO.Path.GetFileNameWithoutExtension(model.SourceFileName);
-                        if (modelName == selectedModelName)
+                        string levelName = cb.Content.ToString();
+                        double? elevation = GetLevelElevation(selectedModelName, levelName);
+                        if (elevation.HasValue)
                         {
-                            if (model.RootItem != null)
-                            {
-                                foreach (Autodesk.Navisworks.Api.ModelItem child in model.RootItem.Children)
-                                {
-                                    var bbox = child.BoundingBox();
-                                    if (bbox != null)
-                                    {
-                                        elevations.Add(bbox.Min.Z);
-                                    }
-                                }
-                            }
-                            break;
+                            elevations.Add(elevation.Value);
                         }
                     }
                 }
@@ -447,7 +437,7 @@ namespace RUKN.Search.Plugin
 
                     var plane = (Autodesk.Navisworks.Api.Interop.ComApi.InwLPlane3f)state.ObjectFactory(
                         Autodesk.Navisworks.Api.Interop.ComApi.nwEObjectType.eObjectType_nwLPlane3f, null, null);
-                    plane.SetValue(normal, bottomZ.Value);
+                    plane.SetValue(normal, -bottomZ.Value);
 
                     plane2.Plane = plane;
                     plane2.Enabled = true;
