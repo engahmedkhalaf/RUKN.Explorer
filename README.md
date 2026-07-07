@@ -2,7 +2,8 @@
 
 **RUKN Explorer - Viewpoint by Level** is a powerful Autodesk® Navisworks® add-in that allows users to automatically create clean, isolated viewpoints for each Revit Level with a slice clipping plane placed at the level's Z elevation.
 
----
+---<img width="1713" height="817" alt="image" src="https://github.com/user-attachments/assets/ae1e3cf9-053f-4398-a966-c6794cb58ccb" />
+
 
 ## Key Features
 
