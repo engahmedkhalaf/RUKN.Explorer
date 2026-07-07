@@ -372,3 +372,6 @@ SelectByRevitId.bundle/
 RUKN.Search.Installer/RUKN.Search.exe
 
 RUKN.Search.bundle.zip
+
+RUKN.Explorer.bundle/Contents/dlls/2024/RUKN.Explorer/*.dll
+!RUKN.Explorer.bundle/Contents/dlls/2024/RUKN.Explorer/RUKN.Explorer.dll
