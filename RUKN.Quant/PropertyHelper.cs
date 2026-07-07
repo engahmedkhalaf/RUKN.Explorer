@@ -64,6 +64,36 @@ namespace RUKN.Quant
             return string.Empty;
         }
 
+        public static double? GetQuantityDouble(ModelItem item, string categoryName, string[] targetKeywords)
+        {
+            if (item == null) return null;
+            try
+            {
+                foreach (PropertyCategory category in item.PropertyCategories)
+                {
+                    string catName = category.DisplayName ?? category.Name;
+                    if (!catName.Equals(categoryName, StringComparison.OrdinalIgnoreCase)) continue;
+
+                    foreach (DataProperty prop in category.Properties)
+                    {
+                        string name = prop.DisplayName ?? prop.Name;
+                        if (string.IsNullOrEmpty(name)) continue;
+
+                        foreach (string keyword in targetKeywords)
+                        {
+                            if (name.Equals(keyword, StringComparison.OrdinalIgnoreCase))
+                            {
+                                double? parsedVal = ParseDouble(prop.Value.ToDisplayString());
+                                if (parsedVal.HasValue && parsedVal.Value > 0) return parsedVal.Value;
+                            }
+                        }
+                    }
+                }
+            }
+            catch { }
+            return null;
+        }
+
         public static double? GetQuantityDouble(ModelItem item, string[] targetKeywords)
         {
             if (item == null) return null;
@@ -119,15 +149,40 @@ namespace RUKN.Quant
             return null;
         }
 
-        public static double? GetQuantityDoubleDeep(ModelItem item, string[] targetKeywords)
+        public static double? GetQuantityDoubleDeep(ModelItem item, string categoryName, string[] targetKeywords)
         {
             if (item == null) return null;
 
-            // 1. Check item itself
-            double? val = GetQuantityDouble(item, targetKeywords);
+            // 1. Check item itself (restricted to target categoryName first)
+            double? val = GetQuantityDouble(item, categoryName, targetKeywords);
             if (val.HasValue) return val.Value;
 
-            // 2. Check ancestors (walk up)
+            // 2. Check ancestors (walk up, restricted to categoryName)
+            try
+            {
+                foreach (ModelItem ancestor in item.Ancestors)
+                {
+                    val = GetQuantityDouble(ancestor, categoryName, targetKeywords);
+                    if (val.HasValue) return val.Value;
+                }
+            }
+            catch { }
+
+            // 3. Check descendants (walk down, restricted to categoryName)
+            try
+            {
+                foreach (ModelItem child in item.Descendants)
+                {
+                    val = GetQuantityDouble(child, categoryName, targetKeywords);
+                    if (val.HasValue) return val.Value;
+                }
+            }
+            catch { }
+
+            // FALLBACK: If not found in target categoryName, search all tabs
+            val = GetQuantityDouble(item, targetKeywords);
+            if (val.HasValue) return val.Value;
+
             try
             {
                 foreach (ModelItem ancestor in item.Ancestors)
@@ -138,7 +193,6 @@ namespace RUKN.Quant
             }
             catch { }
 
-            // 3. Check descendants (walk down)
             try
             {
                 foreach (ModelItem child in item.Descendants)

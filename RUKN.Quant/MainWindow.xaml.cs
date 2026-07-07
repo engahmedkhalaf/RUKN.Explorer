@@ -116,12 +116,12 @@ namespace RUKN.Quant
                     Family = PropertyHelper.GetPropertyStringDeep(item, "Element", new[] { "Family", "Family Name" }),
                     Type = PropertyHelper.GetPropertyStringDeep(item, "Element", new[] { "Type", "Type Name" }),
                     RevitId = PropertyHelper.GetRevitIdDeep(item),
-                    Length = PropertyHelper.GetQuantityDoubleDeep(item, new[] { "Length", "Length Value", "Height", "Cut Length" }),
-                    Area = PropertyHelper.GetQuantityDoubleDeep(item, new[] { "Area", "Area Value", "Gross Area", "Net Area" }),
-                    Volume = PropertyHelper.GetQuantityDoubleDeep(item, new[] { "Volume", "Volume Value", "Gross Volume", "Net Volume" }),
-                    Height = PropertyHelper.GetQuantityDoubleDeep(item, new[] { "Height", "Unconnected Height" }),
-                    Width = PropertyHelper.GetQuantityDoubleDeep(item, new[] { "Width" }),
-                    Thickness = PropertyHelper.GetQuantityDoubleDeep(item, new[] { "Thickness" }),
+                    Length = PropertyHelper.GetQuantityDoubleDeep(item, "Element", new[] { "Length", "Length Value", "Height", "Cut Length" }),
+                    Area = PropertyHelper.GetQuantityDoubleDeep(item, "Element", new[] { "Area", "Area Value", "Gross Area", "Net Area" }),
+                    Volume = PropertyHelper.GetQuantityDoubleDeep(item, "Element", new[] { "Volume", "Volume Value", "Gross Volume", "Net Volume" }),
+                    Height = PropertyHelper.GetQuantityDoubleDeep(item, "Element", new[] { "Height", "Unconnected Height" }),
+                    Width = PropertyHelper.GetQuantityDoubleDeep(item, "Element", new[] { "Width" }),
+                    Thickness = PropertyHelper.GetQuantityDoubleDeep(item, "Element", new[] { "Thickness" }),
                     Count = 1
                 };
 
