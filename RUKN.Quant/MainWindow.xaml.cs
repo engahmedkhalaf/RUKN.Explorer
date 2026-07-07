@@ -10,8 +10,8 @@ namespace RUKN.Quant
 {
     public partial class MainWindow : Window
     {
-        private List<QuantityItem> _allItems = new List<QuantityItem>();
-        private List<QuantityItem> _filteredItems = new List<QuantityItem>();
+        private List<ElementQuantities> _allItems = new List<ElementQuantities>();
+        private List<ElementQuantities> _filteredItems = new List<ElementQuantities>();
 
         public MainWindow()
         {
@@ -54,9 +54,9 @@ namespace RUKN.Quant
             }
         }
 
-        private List<QuantityItem> ExtractQuantitiesFromModel()
+        private List<ElementQuantities> ExtractQuantitiesFromModel()
         {
-            var results = new List<QuantityItem>();
+            var results = new List<ElementQuantities>();
             var doc = Autodesk.Navisworks.Api.Application.ActiveDocument;
             if (doc == null) return results;
 
@@ -109,7 +109,7 @@ namespace RUKN.Quant
             // Now extract quantities from the unique instances
             foreach (var item in uniqueInstances)
             {
-                var qItem = new QuantityItem
+                var qItem = new ElementQuantities
                 {
                     Name = item.DisplayName ?? item.ClassDisplayName ?? "Element",
                     Category = PropertyHelper.GetPropertyStringDeep(item, "Element", new[] { "Category" }),
@@ -185,7 +185,7 @@ namespace RUKN.Quant
             // Generate Summary Groupings
             var summaryData = _filteredItems
                 .GroupBy(i => i.Category ?? "Other")
-                .Select(g => new QuantityItem
+                .Select(g => new ElementQuantities
                 {
                     Category = g.Key,
                     Count = g.Sum(x => x.Count),

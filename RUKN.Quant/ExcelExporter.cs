@@ -7,7 +7,7 @@ namespace RUKN.Quant
 {
     public static class ExcelExporter
     {
-        public static void Export(List<QuantityItem> items, string filePath)
+        public static void Export(List<ElementQuantities> items, string filePath)
         {
             using (var writer = new StreamWriter(filePath, false, Encoding.UTF8))
             {
