@@ -55,6 +55,22 @@ For developers looking to inspect or build the project:
 
 ---
 
+## Technical Developer Notes
+
+### 1. Navisworks Ribbon Configuration
+To ensure your custom plugin ribbon buttons appear correctly in Autodesk Navisworks:
+* You need to supplement the `CommandHandlerPlugin` with a `.xaml` definition file (for newer versions) or the `.name` file localized structure.
+* For professional deployment, place your custom plugin folder in the following user directory:
+  `%AppData%\Autodesk Navisworks Manage [Version]\Plugins\YourPluginName\`
+* To ensure the ribbon registers and loads, you must include a `plugin.xml` or `PackageContents.xml` in your plugin folder structure to register the add-in with Navisworks.
+
+### 2. Deep-Diving into Quantification (COM API)
+While the standard .NET API (the `State` object) is excellent for reading object property values:
+* The **Quantification Workbook** itself is largely exposed through the older COM API.
+* To manipulate, query, or extract data from the Quantification items (which contain the takeoff formulas and mapped resources), you must interact with the **`InwOpQuantification`** interface.
+
+---
+
 ## Installation
 
 To install the add-in:
