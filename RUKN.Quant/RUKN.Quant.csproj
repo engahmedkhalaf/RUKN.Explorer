@@ -4,11 +4,11 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{9D01EAE5-4574-4D7A-A99A-EB8B2C21ABFD}</ProjectGuid>
+    <ProjectGuid>{B6D2088D-EE1E-4541-A9D6-7F1F762B34B9}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>RUKN.Search</RootNamespace>
-    <AssemblyName>RUKN.Explorer</AssemblyName>
+    <RootNamespace>RUKN.Quant</RootNamespace>
+    <AssemblyName>RUKN.Quant</AssemblyName>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
@@ -59,27 +59,25 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Plugin.cs" />
+    <Compile Include="QuantityItem.cs" />
+    <Compile Include="PropertyHelper.cs" />
+    <Compile Include="ExcelExporter.cs" />
+    <Compile Include="MainWindow.xaml.cs">
+      <DependentUpon>MainWindow.xaml</DependentUpon>
+    </Compile>
   </ItemGroup>
-
   <ItemGroup>
-    <Resource Include="Resources\SelectByRevitId.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
+    <Page Include="MainWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
-  <Import Project="..\RUKN.Search.Common\RUKN.Search.Common.projitems" Label="Shared" />
-  <Import Project="..\RUKN.Search.Plugin\RUKN.Search.Plugin.projitems" Label="Shared" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>mkdir "$(SolutionDir)RUKN.Explorer.bundle\Contents\dlls\2024\RUKN.Explorer\en-US"
-mkdir "$(SolutionDir)RUKN.Explorer.bundle\Contents\dlls\2024\RUKN.Explorer\Images"
-copy "$(TargetDir)*.dll" "$(SolutionDir)RUKN.Explorer.bundle\Contents\dlls\2024\RUKN.Explorer"
-copy "$(SolutionDir)RUKN.Search.Common\Images\*" "$(SolutionDir)RUKN.Explorer.bundle\Contents\dlls\2024\RUKN.Explorer\Images"
-copy "$(SolutionDir)RUKN.Search.Common\en-US\PluginRibbon.xaml" "$(SolutionDir)RUKN.Explorer.bundle\Contents\dlls\2024\RUKN.Explorer\en-US"
-copy "$(SolutionDir)RUKN.Search.Common\PackageContents.xml" "$(SolutionDir)RUKN.Explorer.bundle"
+    <PostBuildEvent>mkdir "$(SolutionDir)RUKN.Explorer.bundle\Contents\dlls\2024\RUKN.Quant"
+copy "$(TargetDir)*.dll" "$(SolutionDir)RUKN.Explorer.bundle\Contents\dlls\2024\RUKN.Quant"
 
-if EXIST "%25APPDATA%25\Autodesk\ApplicationPlugins\RUKN.Explorer.bundle" rmdir /s /q "%25AppData%25\Autodesk\ApplicationPlugins\RUKN.Explorer.bundle"
-mkdir "%25APPDATA%25\Autodesk\ApplicationPlugins\RUKN.Explorer.bundle"
-xcopy /e /s /h /y "$(SolutionDir)RUKN.Explorer.bundle\*" "%25APPDATA%25\Autodesk\ApplicationPlugins\RUKN.Explorer.bundle\"</PostBuildEvent>
+if EXIST "%25APPDATA%25\Autodesk\ApplicationPlugins\RUKN.Explorer.bundle" xcopy /e /s /h /y "$(SolutionDir)RUKN.Explorer.bundle\*" "%25APPDATA%25\Autodesk\ApplicationPlugins\RUKN.Explorer.bundle\"</PostBuildEvent>
   </PropertyGroup>
 </Project>
-

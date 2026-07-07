@@ -375,3 +375,6 @@ RUKN.Search.bundle.zip
 
 RUKN.Explorer.bundle/Contents/dlls/2024/RUKN.Explorer/*.dll
 !RUKN.Explorer.bundle/Contents/dlls/2024/RUKN.Explorer/RUKN.Explorer.dll
+
+RUKN.Explorer.bundle/Contents/dlls/2024/RUKN.Quant/*.dll
+!RUKN.Explorer.bundle/Contents/dlls/2024/RUKN.Quant/RUKN.Quant.dll
