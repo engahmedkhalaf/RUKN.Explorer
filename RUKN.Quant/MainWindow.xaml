@@ -182,6 +182,7 @@
                             <DataGridTextColumn Header="Family" Binding="{Binding Family}" Width="1*"/>
                             <DataGridTextColumn Header="Type" Binding="{Binding Type}" Width="1*"/>
                             <DataGridTextColumn Header="Revit ID" Binding="{Binding RevitId}" Width="0.8*"/>
+                            <DataGridTextColumn Header="Length (m)" Binding="{Binding Length, StringFormat={}{0:F2}}" Width="0.8*"/>
                             <DataGridTextColumn Header="Area (m²)" Binding="{Binding Area, StringFormat={}{0:F2}}" Width="0.8*"/>
                             <DataGridTextColumn Header="Volume (m³)" Binding="{Binding Volume, StringFormat={}{0:F2}}" Width="0.8*"/>
                         </DataGrid.Columns>
@@ -208,6 +209,7 @@
                             <DataGridTextColumn Header="Count" Binding="{Binding Count}" Width="0.8*"/>
                             <DataGridTextColumn Header="Vol (m³)" Binding="{Binding Volume, StringFormat={}{0:F1}}" Width="1*"/>
                             <DataGridTextColumn Header="Area (m²)" Binding="{Binding Area, StringFormat={}{0:F1}}" Width="1*"/>
+                            <DataGridTextColumn Header="Length (m)" Binding="{Binding Length, StringFormat={}{0:F1}}" Width="1*"/>
                         </DataGrid.Columns>
                     </DataGrid>
                 </Grid>

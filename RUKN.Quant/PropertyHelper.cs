@@ -72,7 +72,13 @@ namespace RUKN.Quant
                 foreach (PropertyCategory category in item.PropertyCategories)
                 {
                     string catName = category.DisplayName ?? category.Name;
-                    if (!catName.Equals(categoryName, StringComparison.OrdinalIgnoreCase)) continue;
+                    if (string.IsNullOrEmpty(catName)) continue;
+
+                    // Match if category name equals categoryName or contains it (e.g. LcRevitData_Element contains Element)
+                    bool matchCat = catName.Equals(categoryName, StringComparison.OrdinalIgnoreCase) ||
+                                    catName.IndexOf(categoryName, StringComparison.OrdinalIgnoreCase) >= 0;
+
+                    if (!matchCat) continue;
 
                     foreach (DataProperty prop in category.Properties)
                     {
@@ -248,17 +254,21 @@ namespace RUKN.Quant
                 foreach (PropertyCategory category in item.PropertyCategories)
                 {
                     string catName = category.DisplayName ?? category.Name;
-                    if (catName.Equals(categoryName, StringComparison.OrdinalIgnoreCase))
+                    if (string.IsNullOrEmpty(catName)) continue;
+
+                    bool matchCat = catName.Equals(categoryName, StringComparison.OrdinalIgnoreCase) ||
+                                    catName.IndexOf(categoryName, StringComparison.OrdinalIgnoreCase) >= 0;
+
+                    if (!matchCat) continue;
+
+                    foreach (DataProperty prop in category.Properties)
                     {
-                        foreach (DataProperty prop in category.Properties)
+                        string propName = prop.DisplayName ?? prop.Name;
+                        foreach (string target in propertyNames)
                         {
-                            string propName = prop.DisplayName ?? prop.Name;
-                            foreach (string target in propertyNames)
+                            if (propName.Equals(target, StringComparison.OrdinalIgnoreCase))
                             {
-                                if (propName.Equals(target, StringComparison.OrdinalIgnoreCase))
-                                {
-                                    return prop.Value.ToDisplayString() ?? string.Empty;
-                                }
+                                return prop.Value.ToDisplayString() ?? string.Empty;
                             }
                         }
                     }
