@@ -220,6 +220,9 @@ namespace RUKN.Search.Plugin
             {
                 var doc = Autodesk.Navisworks.Api.Application.ActiveDocument;
                 string unitText = GetUnitText();
+                // Precache level elevations once with coordinate transformation to avoid slow repeated search queries in the loop
+                PrecacheLevelElevations(selectedModel);
+
                 var allElevations = GetAllLevelElevations(selectedModel);
 
                 // Save current selection to restore at the end
@@ -375,6 +378,131 @@ namespace RUKN.Search.Plugin
             return null;
         }
 
+        private System.Collections.Generic.Dictionary<string, double> _cachedLevelElevations = new System.Collections.Generic.Dictionary<string, double>(System.StringComparer.OrdinalIgnoreCase);
+
+        private void PrecacheLevelElevations(string selectedModelName)
+        {
+            _cachedLevelElevations.Clear();
+            try
+            {
+                var doc = Autodesk.Navisworks.Api.Application.ActiveDocument;
+                if (doc != null)
+                {
+                    // Find the selected model's transform
+                    var modelTransform = Autodesk.Navisworks.Api.Transform3D.CreateTranslation(new Autodesk.Navisworks.Api.Vector3D(0, 0, 0));
+                    foreach (Autodesk.Navisworks.Api.Model model in doc.Models)
+                    {
+                        string modelName = model.RootItem != null ? model.RootItem.DisplayName : System.IO.Path.GetFileNameWithoutExtension(model.SourceFileName);
+                        if (modelName == selectedModelName)
+                        {
+                            modelTransform = model.Transform;
+                            break;
+                        }
+                    }
+
+                    // 1. Check active grid system levels first, transform to world coordinates, and cache
+                    try
+                    {
+                        var activeSys = doc.Grids.ActiveSystem;
+                        if (activeSys != null && activeSys.Levels != null)
+                        {
+                            foreach (var gridLevel in activeSys.Levels)
+                            {
+                                if (!string.IsNullOrEmpty(gridLevel.DisplayName))
+                                {
+                                    var comps = modelTransform.Factor();
+                                    double worldZ = gridLevel.Elevation * comps.Scale.Z + comps.Translation.Z;
+                                    _cachedLevelElevations[gridLevel.DisplayName] = worldZ;
+                                }
+                            }
+                        }
+                    }
+                    catch { }
+
+                    // 2. Search category "Levels" model items (already in world space)
+                    try
+                    {
+                        var search = new Autodesk.Navisworks.Api.Search();
+                        search.Selection.SelectAll();
+                        search.SearchConditions.Add(
+                            Autodesk.Navisworks.Api.SearchCondition.HasPropertyByDisplayName("Element", "Category")
+                                .EqualValue(Autodesk.Navisworks.Api.VariantData.FromDisplayString("Levels")));
+                        
+                        var results = search.FindAll(doc, false);
+                        foreach (var item in results)
+                        {
+                            if (item.DisplayName != null)
+                            {
+                                bool belongsToModel = false;
+                                foreach (var ancestor in item.Ancestors)
+                                {
+                                    string ancestorName = ancestor.DisplayName ?? "";
+                                    if (ancestorName.IndexOf(selectedModelName, System.StringComparison.OrdinalIgnoreCase) >= 0)
+                                    {
+                                        belongsToModel = true;
+                                        break;
+                                    }
+                                }
+                                if (belongsToModel)
+                                {
+                                    var bbox = item.BoundingBox();
+                                    if (bbox != null)
+                                    {
+                                        if (!_cachedLevelElevations.ContainsKey(item.DisplayName))
+                                        {
+                                            _cachedLevelElevations[item.DisplayName] = bbox.Min.Z;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    catch { }
+
+                    // 3. Search category "Grids" model items (already in world space)
+                    try
+                    {
+                        var search = new Autodesk.Navisworks.Api.Search();
+                        search.Selection.SelectAll();
+                        search.SearchConditions.Add(
+                            Autodesk.Navisworks.Api.SearchCondition.HasPropertyByDisplayName("Element", "Category")
+                                .EqualValue(Autodesk.Navisworks.Api.VariantData.FromDisplayString("Grids")));
+                        
+                        var results = search.FindAll(doc, false);
+                        foreach (var item in results)
+                        {
+                            if (item.DisplayName != null)
+                            {
+                                bool belongsToModel = false;
+                                foreach (var ancestor in item.Ancestors)
+                                {
+                                    string ancestorName = ancestor.DisplayName ?? "";
+                                    if (ancestorName.IndexOf(selectedModelName, System.StringComparison.OrdinalIgnoreCase) >= 0)
+                                    {
+                                        belongsToModel = true;
+                                        break;
+                                    }
+                                }
+                                if (belongsToModel)
+                                {
+                                    var bbox = item.BoundingBox();
+                                    if (bbox != null)
+                                    {
+                                        if (!_cachedLevelElevations.ContainsKey(item.DisplayName))
+                                        {
+                                            _cachedLevelElevations[item.DisplayName] = bbox.Min.Z;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    catch { }
+                }
+            }
+            catch { }
+        }
+
         private double? GetLevelElevationFromProperties(Autodesk.Navisworks.Api.ModelItem item)
         {
             if (item == null) return null;
@@ -385,9 +513,9 @@ namespace RUKN.Search.Plugin
                 {
                     foreach (Autodesk.Navisworks.Api.DataProperty prop in category.Properties)
                     {
-                        if (prop.DisplayName.Equals("Elevation", StringComparison.OrdinalIgnoreCase) ||
-                            prop.Name.Equals("Elevation", StringComparison.OrdinalIgnoreCase) ||
-                            prop.DisplayName.Equals("Elevation Height", StringComparison.OrdinalIgnoreCase))
+                        if (prop.DisplayName.Equals("Elevation", System.StringComparison.OrdinalIgnoreCase) ||
+                            prop.Name.Equals("Elevation", System.StringComparison.OrdinalIgnoreCase) ||
+                            prop.DisplayName.Equals("Elevation Height", System.StringComparison.OrdinalIgnoreCase))
                         {
                             var val = prop.Value;
                             if (val.IsDouble)
@@ -405,13 +533,20 @@ namespace RUKN.Search.Plugin
                     }
                 }
             }
-            catch (Exception) { }
+            catch (System.Exception) { }
 
             return null;
         }
 
         private double? GetLevelElevation(string selectedModelName, string levelNameName)
         {
+            // 1. Try to read from the cached level elevations dictionary first (highest priority, cached world Z coordinate)
+            if (_cachedLevelElevations.TryGetValue(levelNameName, out double cachedElevation))
+            {
+                return cachedElevation;
+            }
+
+            // 2. Fallback: Try properties (transformed to world space) or bounding box Center Z of the level folder (second priority)
             try
             {
                 if (Autodesk.Navisworks.Api.Application.ActiveDocument != null)
@@ -427,14 +562,15 @@ namespace RUKN.Search.Plugin
                                 {
                                     if (child.DisplayName == levelNameName)
                                     {
-                                        // 1. Try to get exact elevation from properties first
                                         double? propElevation = GetLevelElevationFromProperties(child);
                                         if (propElevation.HasValue)
                                         {
-                                            return propElevation.Value;
+                                            var comps = model.Transform.Factor();
+                                            double worldZ = propElevation.Value * comps.Scale.Z + comps.Translation.Z;
+                                            return worldZ;
                                         }
 
-                                        // 2. Fallback to bounding box Center Z
+                                        // Fallback to bounding box Center Z (world space)
                                         var bbox = child.BoundingBox();
                                         if (bbox != null)
                                         {
@@ -448,7 +584,8 @@ namespace RUKN.Search.Plugin
                     }
                 }
             }
-            catch (Exception) { }
+            catch (System.Exception) { }
+
             return null;
         }
 

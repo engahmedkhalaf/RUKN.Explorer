@@ -36,7 +36,38 @@
     <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Speckle.Navisworks.API" Version="2024.0.0" />
+    <Reference Include="AdWindows, Version=5.0.3.1, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Speckle.Navisworks.API.2024.0.0\lib\net48\AdWindows.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Autodesk.Navisworks.Api, Version=21.0.0.0, Culture=neutral, PublicKeyToken=d85e58fa5af9b484, processorArchitecture=AMD64">
+      <HintPath>..\packages\Speckle.Navisworks.API.2024.0.0\lib\net48\Autodesk.Navisworks.Api.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Autodesk.Navisworks.ComApi, Version=21.0.0.0, Culture=neutral, PublicKeyToken=d85e58fa5af9b484, processorArchitecture=AMD64">
+      <HintPath>..\packages\Speckle.Navisworks.API.2024.0.0\lib\net48\Autodesk.Navisworks.ComApi.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Autodesk.Navisworks.Controls, Version=21.0.0.0, Culture=neutral, PublicKeyToken=d85e58fa5af9b484, processorArchitecture=AMD64">
+      <HintPath>..\packages\Speckle.Navisworks.API.2024.0.0\lib\net48\Autodesk.Navisworks.Controls.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Autodesk.Navisworks.Interop.ComApi, Version=21.0.0.0, Culture=neutral, PublicKeyToken=d85e58fa5af9b484, processorArchitecture=AMD64">
+      <HintPath>..\packages\Speckle.Navisworks.API.2024.0.0\lib\net48\Autodesk.Navisworks.Interop.ComApi.dll</HintPath>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="navisworks.gui.common, Version=21.0.0.0, Culture=neutral, processorArchitecture=AMD64">
+      <HintPath>..\packages\Speckle.Navisworks.API.2024.0.0\lib\net48\navisworks.gui.common.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="navisworks.gui.interface, Version=21.0.0.0, Culture=neutral, processorArchitecture=AMD64">
+      <HintPath>..\packages\Speckle.Navisworks.API.2024.0.0\lib\net48\navisworks.gui.interface.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="navisworks.gui.roamer, Version=21.0.0.0, Culture=neutral, processorArchitecture=AMD64">
+      <HintPath>..\packages\Speckle.Navisworks.API.2024.0.0\lib\net48\navisworks.gui.roamer.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="System.Windows.Forms" />
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
@@ -70,16 +101,16 @@
   <Import Project="..\RUKN.Search.Plugin\RUKN.Search.Plugin.projitems" Label="Shared" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>mkdir "$(SolutionDir)\RUKN.Explorer.bundle\Contents\dlls\2024\RUKN.Explorer\en-US"
-mkdir "$(SolutionDir)\RUKN.Explorer.bundle\Contents\dlls\2024\RUKN.Explorer\Images"
-copy "$(TargetDir)\*.dll" "$(SolutionDir)\RUKN.Explorer.bundle\Contents\dlls\2024\RUKN.Explorer"
-copy "$(SolutionDir)\RUKN.Search.Common\Images\*" "$(SolutionDir)\RUKN.Explorer.bundle\Contents\dlls\2024\RUKN.Explorer\Images"
-copy "$(SolutionDir)\RUKN.Search.Common\en-US\PluginRibbon.xaml" "$(SolutionDir)\RUKN.Explorer.bundle\Contents\dlls\2024\RUKN.Explorer\en-US"
-copy "$(SolutionDir)\RUKN.Search.Common\PackageContents.xml" "$(SolutionDir)\RUKN.Explorer.bundle"
+    <PostBuildEvent>mkdir "$(SolutionDir)RUKN.Explorer.bundle\Contents\dlls\2024\RUKN.Explorer\en-US"
+mkdir "$(SolutionDir)RUKN.Explorer.bundle\Contents\dlls\2024\RUKN.Explorer\Images"
+copy "$(TargetDir)*.dll" "$(SolutionDir)RUKN.Explorer.bundle\Contents\dlls\2024\RUKN.Explorer"
+copy "$(SolutionDir)RUKN.Search.Common\Images\*" "$(SolutionDir)RUKN.Explorer.bundle\Contents\dlls\2024\RUKN.Explorer\Images"
+copy "$(SolutionDir)RUKN.Search.Common\en-US\PluginRibbon.xaml" "$(SolutionDir)RUKN.Explorer.bundle\Contents\dlls\2024\RUKN.Explorer\en-US"
+copy "$(SolutionDir)RUKN.Search.Common\PackageContents.xml" "$(SolutionDir)RUKN.Explorer.bundle"
 
 if EXIST "%25APPDATA%25\Autodesk\ApplicationPlugins\RUKN.Explorer.bundle" rmdir /s /q "%25AppData%25\Autodesk\ApplicationPlugins\RUKN.Explorer.bundle"
 mkdir "%25APPDATA%25\Autodesk\ApplicationPlugins\RUKN.Explorer.bundle"
-xcopy /e /s /h /y "$(SolutionDir)\RUKN.Explorer.bundle" "%25APPDATA%25\Autodesk\ApplicationPlugins\RUKN.Explorer.bundle"</PostBuildEvent>
+xcopy /e /s /h /y "$(SolutionDir)RUKN.Explorer.bundle\*" "%25APPDATA%25\Autodesk\ApplicationPlugins\RUKN.Explorer.bundle\"</PostBuildEvent>
   </PropertyGroup>
 </Project>
 
