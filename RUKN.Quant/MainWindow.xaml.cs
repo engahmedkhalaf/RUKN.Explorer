@@ -2,7 +2,6 @@ using Autodesk.Navisworks.Api;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -22,7 +21,7 @@ namespace RUKN.Quant
             System.Windows.Forms.Integration.ElementHost.EnableModelessKeyboardInterop(this);
         }
 
-        private async void BtnExtract_Click(object sender, RoutedEventArgs e)
+        private void BtnExtract_Click(object sender, RoutedEventArgs e)
         {
             GridProgress.Visibility = Visibility.Visible;
             TxtStatus.Text = "Scanning model and extracting properties...";
@@ -32,8 +31,8 @@ namespace RUKN.Quant
 
             try
             {
-                // Run extraction on background thread to keep UI fully responsive
-                _allItems = await Task.Run(() => ExtractQuantitiesFromModel());
+                // Run extraction synchronously on the main thread to prevent COM AccessViolationExceptions in Navisworks API
+                _allItems = ExtractQuantitiesFromModel();
                 
                 watch.Stop();
                 
@@ -61,66 +60,102 @@ namespace RUKN.Quant
             var doc = Autodesk.Navisworks.Api.Application.ActiveDocument;
             if (doc == null) return results;
 
-            foreach (Model model in doc.Models)
+            // Get selected items or fallback to scanning all model items
+            var selectedItems = doc.CurrentSelection.SelectedItems;
+            IEnumerable<ModelItem> itemsToScan;
+            if (selectedItems != null && selectedItems.Count > 0)
             {
-                if (model.RootItem != null)
+                itemsToScan = selectedItems.DescendantsAndSelf;
+            }
+            else
+            {
+                var allItems = new List<ModelItem>();
+                foreach (Model model in doc.Models)
                 {
-                    // Scan all geometric objects inside the model
-                    var descendants = model.RootItem.DescendantsAndSelf;
-                    foreach (var item in descendants)
+                    if (model.RootItem != null)
                     {
-                        if (item.HasGeometry)
+                        allItems.AddRange(model.RootItem.DescendantsAndSelf);
+                    }
+                }
+                itemsToScan = allItems;
+            }
+
+            // Find all unique element instances (parents of geometry leaf nodes)
+            var uniqueInstances = new HashSet<ModelItem>();
+            foreach (var item in itemsToScan)
+            {
+                if (item.HasGeometry)
+                {
+                    // Check if it's a leaf node containing geometry (no children of this item have geometry)
+                    bool isLeafGeometry = true;
+                    foreach (ModelItem child in item.Children)
+                    {
+                        if (child.HasGeometry)
                         {
-                            var qItem = new QuantityItem
-                            {
-                                Name = item.DisplayName ?? item.ClassDisplayName ?? "Element",
-                                Category = PropertyHelper.GetPropertyString(item, "Element", "Category"),
-                                Family = PropertyHelper.GetPropertyString(item, "Element", "Family Name"),
-                                Type = PropertyHelper.GetPropertyString(item, "Element", "Type Name"),
-                                RevitId = PropertyHelper.GetRevitId(item),
-                                Length = PropertyHelper.GetQuantityDouble(item, new[] { "Length", "Length Value", "Height", "Cut Length" }),
-                                Area = PropertyHelper.GetQuantityDouble(item, new[] { "Area", "Area Value", "Gross Area", "Net Area" }),
-                                Volume = PropertyHelper.GetQuantityDouble(item, new[] { "Volume", "Volume Value", "Gross Volume", "Net Volume" }),
-                                Height = PropertyHelper.GetQuantityDouble(item, new[] { "Height", "Unconnected Height" }),
-                                Width = PropertyHelper.GetQuantityDouble(item, new[] { "Width" }),
-                                Thickness = PropertyHelper.GetQuantityDouble(item, new[] { "Thickness" }),
-                                Count = 1
-                            };
+                            isLeafGeometry = false;
+                            break;
+                        }
+                    }
 
-                            // Fallback lookup: Walk up ancestor tree to inherit Category if not set directly on geometry
-                            if (string.IsNullOrEmpty(qItem.Category))
-                            {
-                                foreach (var ancestor in item.Ancestors)
-                                {
-                                    string cat = PropertyHelper.GetPropertyString(ancestor, "Element", "Category");
-                                    if (!string.IsNullOrEmpty(cat))
-                                    {
-                                        qItem.Category = cat;
-                                        break;
-                                    }
-                                }
-                            }
+                    if (isLeafGeometry)
+                    {
+                        // The parent of the geometry leaf is the physical instance element
+                        ModelItem instance = item.Parent != null ? item.Parent : item;
+                        uniqueInstances.Add(instance);
+                    }
+                }
+            }
 
-                            // Second fallback: parse parent's display category
-                            if (string.IsNullOrEmpty(qItem.Category))
-                            {
-                                qItem.Category = item.Parent != null ? (item.Parent.DisplayName ?? item.Parent.ClassDisplayName) : "Other";
-                            }
+            // Now extract quantities from the unique instances
+            foreach (var item in uniqueInstances)
+            {
+                var qItem = new QuantityItem
+                {
+                    Name = item.DisplayName ?? item.ClassDisplayName ?? "Element",
+                    Category = PropertyHelper.GetPropertyStringDeep(item, "Element", new[] { "Category" }),
+                    Family = PropertyHelper.GetPropertyStringDeep(item, "Element", new[] { "Family", "Family Name" }),
+                    Type = PropertyHelper.GetPropertyStringDeep(item, "Element", new[] { "Type", "Type Name" }),
+                    RevitId = PropertyHelper.GetRevitIdDeep(item),
+                    Length = PropertyHelper.GetQuantityDoubleDeep(item, new[] { "Length", "Length Value", "Height", "Cut Length" }),
+                    Area = PropertyHelper.GetQuantityDoubleDeep(item, new[] { "Area", "Area Value", "Gross Area", "Net Area" }),
+                    Volume = PropertyHelper.GetQuantityDoubleDeep(item, new[] { "Volume", "Volume Value", "Gross Volume", "Net Volume" }),
+                    Height = PropertyHelper.GetQuantityDoubleDeep(item, new[] { "Height", "Unconnected Height" }),
+                    Width = PropertyHelper.GetQuantityDoubleDeep(item, new[] { "Width" }),
+                    Thickness = PropertyHelper.GetQuantityDoubleDeep(item, new[] { "Thickness" }),
+                    Count = 1
+                };
 
-                            // Normalize naming parameters
-                            if (string.IsNullOrEmpty(qItem.Family))
-                            {
-                                qItem.Family = item.Parent != null ? item.Parent.DisplayName : "Generic";
-                            }
-                            if (string.IsNullOrEmpty(qItem.Type))
-                            {
-                                qItem.Type = item.ClassDisplayName ?? "Generic Type";
-                            }
-
-                            results.Add(qItem);
+                // Fallback lookup: Walk up ancestor tree to inherit Category if not set directly
+                if (string.IsNullOrEmpty(qItem.Category))
+                {
+                    foreach (var ancestor in item.Ancestors)
+                    {
+                        string cat = PropertyHelper.GetPropertyString(ancestor, "Element", new[] { "Category" });
+                        if (!string.IsNullOrEmpty(cat))
+                        {
+                            qItem.Category = cat;
+                            break;
                         }
                     }
                 }
+
+                // Second fallback: parse parent's display category
+                if (string.IsNullOrEmpty(qItem.Category))
+                {
+                    qItem.Category = item.Parent != null ? (item.Parent.DisplayName ?? item.Parent.ClassDisplayName) : "Other";
+                }
+
+                // Normalize naming parameters
+                if (string.IsNullOrEmpty(qItem.Family))
+                {
+                    qItem.Family = item.Parent != null ? item.Parent.DisplayName : "Generic";
+                }
+                if (string.IsNullOrEmpty(qItem.Type))
+                {
+                    qItem.Type = item.ClassDisplayName ?? "Generic Type";
+                }
+
+                results.Add(qItem);
             }
 
             return results;
@@ -154,6 +189,7 @@ namespace RUKN.Quant
                 {
                     Category = g.Key,
                     Count = g.Sum(x => x.Count),
+                    Length = g.Sum(x => x.Length ?? 0),
                     Area = g.Sum(x => x.Area ?? 0),
                     Volume = g.Sum(x => x.Volume ?? 0)
                 })
