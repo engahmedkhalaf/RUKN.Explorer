@@ -758,6 +758,7 @@ namespace RUKN.Search.Plugin
             public string Level { get; set; } = "N/A";
             public string TopZ { get; set; } = "N/A";
             public string BottomZ { get; set; } = "N/A";
+            public Autodesk.Navisworks.Api.SavedViewpoint SavedVp { get; set; }
         }
 
         private void CollectViewpoints(Autodesk.Navisworks.Api.SavedItem item, string parentPath, System.Collections.Generic.List<ViewpointReportItem> results)
@@ -777,7 +778,8 @@ namespace RUKN.Search.Plugin
                 results.Add(new ViewpointReportItem
                 {
                     Name = item.DisplayName,
-                    Path = parentPath
+                    Path = parentPath,
+                    SavedVp = item as Autodesk.Navisworks.Api.SavedViewpoint
                 });
             }
         }
@@ -915,12 +917,16 @@ namespace RUKN.Search.Plugin
                     sheet.Cells[5, 4] = "BIM Level";
                     sheet.Cells[5, 5] = "Top Offset";
                     sheet.Cells[5, 6] = "Bottom Offset";
+                    sheet.Cells[5, 7] = "Viewpoint Screenshot";
 
-                    // Style Column Headers (Row 5: A5 to F5)
-                    dynamic headerRange = sheet.Range["A5", "F5"];
+                    // Style Column Headers (Row 5: A5 to G5)
+                    dynamic headerRange = sheet.Range["A5", "G5"];
                     headerRange.Font.Bold = true;
                     headerRange.Font.Color = 16777215; // White text (#FFFFFF)
                     headerRange.Interior.Color = 13528603; // Brand Blue (#1B6ECE)
+
+                    // Make the Screenshot column wider
+                    sheet.Columns["G"].ColumnWidth = 22;
 
                     int row = 6;
                     foreach (var vp in viewpoints)
@@ -934,12 +940,59 @@ namespace RUKN.Search.Plugin
                         sheet.Cells[row, 4] = parsed.Level ?? "";
                         sheet.Cells[row, 5] = parsed.TopZ ?? "";
                         sheet.Cells[row, 6] = parsed.BottomZ ?? "";
+
+                        // Set Row Height to fit the screenshot image
+                        sheet.Rows[row].RowHeight = 85;
+
+                        // Switch viewpoint to capture correct screenshot
+                        if (vp.SavedVp != null)
+                        {
+                            doc.SavedViewpoints.CurrentSavedViewpoint = vp.SavedVp;
+                        }
+
+                        // Generate viewpoint thumbnail screenshot image
+                        string tempImgPath = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"vp_thumb_{Guid.NewGuid():N}.png");
+                        bool hasImage = false;
+
+                        try
+                        {
+                            Autodesk.Navisworks.Api.Application.Automation.GenerateThumbnail(320, 240, tempImgPath);
+                            if (System.IO.File.Exists(tempImgPath))
+                            {
+                                hasImage = true;
+                            }
+                        }
+                        catch { }
+
+                        // Embed screenshot into Column 7 (G)
+                        if (hasImage)
+                        {
+                            try
+                            {
+                                dynamic cell = sheet.Cells[row, 7];
+                                double left = (double)cell.Left + 5;
+                                double top = (double)cell.Top + 5;
+                                double imgWidth = 110;
+                                double imgHeight = 75;
+
+                                sheet.Shapes.AddPicture(tempImgPath, false, true, left, top, imgWidth, imgHeight);
+                            }
+                            catch { }
+
+                            // Delete the temporary image file
+                            try
+                            {
+                                System.IO.File.Delete(tempImgPath);
+                            }
+                            catch { }
+                        }
+
                         row++;
                     }
 
-                    // Auto-fit columns
-                    dynamic allColumns = sheet.Columns;
-                    allColumns.AutoFit();
+                    // Auto-fit columns (except Column G which we styled specifically)
+                    dynamic colAtoF = sheet.Range["A1", "F1"].EntireColumn;
+                    colAtoF.AutoFit();
 
                     // Save the workbook
                     workbook.SaveAs(filePath);
