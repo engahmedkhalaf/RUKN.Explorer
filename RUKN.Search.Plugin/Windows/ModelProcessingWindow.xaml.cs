@@ -358,28 +358,72 @@ namespace RUKN.Search.Plugin
             }
         }
 
+        private Autodesk.Navisworks.Api.ModelItem FindModelItem(string selectedModelName)
+        {
+            var doc = Autodesk.Navisworks.Api.Application.ActiveDocument;
+            if (doc != null)
+            {
+                foreach (Autodesk.Navisworks.Api.Model model in doc.Models)
+                {
+                    if (model.RootItem != null)
+                    {
+                        if (model.RootItem.DisplayName == selectedModelName)
+                        {
+                            return model.RootItem;
+                        }
+                        
+                        foreach (Autodesk.Navisworks.Api.ModelItem child in model.RootItem.Children)
+                        {
+                            if (child.DisplayName == selectedModelName)
+                            {
+                                return child;
+                            }
+                        }
+                    }
+                }
+            }
+            return null;
+        }
+
+        private Autodesk.Navisworks.Api.Model FindParentModel(string selectedModelName)
+        {
+            var doc = Autodesk.Navisworks.Api.Application.ActiveDocument;
+            if (doc != null)
+            {
+                foreach (Autodesk.Navisworks.Api.Model model in doc.Models)
+                {
+                    if (model.RootItem != null)
+                    {
+                        if (model.RootItem.DisplayName == selectedModelName)
+                        {
+                            return model;
+                        }
+                        
+                        foreach (Autodesk.Navisworks.Api.ModelItem child in model.RootItem.Children)
+                        {
+                            if (child.DisplayName == selectedModelName)
+                            {
+                                return model;
+                            }
+                        }
+                    }
+                }
+            }
+            return null;
+        }
+
         private Autodesk.Navisworks.Api.ModelItem GetLevelModelItem(string selectedModelName, string levelNameName)
         {
             try
             {
-                if (Autodesk.Navisworks.Api.Application.ActiveDocument != null)
+                var targetItem = FindModelItem(selectedModelName);
+                if (targetItem != null)
                 {
-                    foreach (Autodesk.Navisworks.Api.Model model in Autodesk.Navisworks.Api.Application.ActiveDocument.Models)
+                    foreach (Autodesk.Navisworks.Api.ModelItem child in targetItem.Children)
                     {
-                        string modelName = model.RootItem != null ? model.RootItem.DisplayName : System.IO.Path.GetFileNameWithoutExtension(model.SourceFileName);
-                        if (modelName == selectedModelName)
+                        if (child.DisplayName == levelNameName)
                         {
-                            if (model.RootItem != null)
-                            {
-                                foreach (Autodesk.Navisworks.Api.ModelItem child in model.RootItem.Children)
-                                {
-                                    if (child.DisplayName == levelNameName)
-                                    {
-                                        return child;
-                                    }
-                                }
-                            }
-                            break;
+                            return child;
                         }
                     }
                 }
@@ -400,14 +444,10 @@ namespace RUKN.Search.Plugin
                 {
                     // Find the selected model's transform
                     var modelTransform = Autodesk.Navisworks.Api.Transform3D.CreateTranslation(new Autodesk.Navisworks.Api.Vector3D(0, 0, 0));
-                    foreach (Autodesk.Navisworks.Api.Model model in doc.Models)
+                    var parentModel = FindParentModel(selectedModelName);
+                    if (parentModel != null)
                     {
-                        string modelName = model.RootItem != null ? model.RootItem.DisplayName : System.IO.Path.GetFileNameWithoutExtension(model.SourceFileName);
-                        if (modelName == selectedModelName)
-                        {
-                            modelTransform = model.Transform;
-                            break;
-                        }
+                        modelTransform = parentModel.Transform;
                     }
 
                     // 1. Check active grid system levels first, transform to world coordinates, and cache
@@ -561,35 +601,29 @@ namespace RUKN.Search.Plugin
             {
                 if (Autodesk.Navisworks.Api.Application.ActiveDocument != null)
                 {
-                    foreach (Autodesk.Navisworks.Api.Model model in Autodesk.Navisworks.Api.Application.ActiveDocument.Models)
+                    var targetItem = FindModelItem(selectedModelName);
+                    var parentModel = FindParentModel(selectedModelName);
+                    if (targetItem != null && parentModel != null)
                     {
-                        string modelName = model.RootItem != null ? model.RootItem.DisplayName : System.IO.Path.GetFileNameWithoutExtension(model.SourceFileName);
-                        if (modelName == selectedModelName)
+                        foreach (Autodesk.Navisworks.Api.ModelItem child in targetItem.Children)
                         {
-                            if (model.RootItem != null)
+                            if (child.DisplayName == levelNameName)
                             {
-                                foreach (Autodesk.Navisworks.Api.ModelItem child in model.RootItem.Children)
+                                double? propElevation = GetLevelElevationFromProperties(child);
+                                if (propElevation.HasValue)
                                 {
-                                    if (child.DisplayName == levelNameName)
-                                    {
-                                        double? propElevation = GetLevelElevationFromProperties(child);
-                                        if (propElevation.HasValue)
-                                        {
-                                            var comps = model.Transform.Factor();
-                                            double worldZ = propElevation.Value * comps.Scale.Z + comps.Translation.Z;
-                                            return worldZ;
-                                        }
+                                    var comps = parentModel.Transform.Factor();
+                                    double worldZ = propElevation.Value * comps.Scale.Z + comps.Translation.Z;
+                                    return worldZ;
+                                }
 
-                                        // Fallback to bounding box Center Z (world space)
-                                        var bbox = child.BoundingBox();
-                                        if (bbox != null)
-                                        {
-                                            return (bbox.Min.Z + bbox.Max.Z) / 2.0;
-                                        }
-                                    }
+                                // Fallback to bounding box Center Z (world space)
+                                var bbox = child.BoundingBox();
+                                if (bbox != null)
+                                {
+                                    return (bbox.Min.Z + bbox.Max.Z) / 2.0;
                                 }
                             }
-                            break;
                         }
                     }
                 }
@@ -1025,33 +1059,56 @@ namespace RUKN.Search.Plugin
             ComboModel.Items.Clear();
             try
             {
-                if (Autodesk.Navisworks.Api.Application.ActiveDocument != null)
+                var doc = Autodesk.Navisworks.Api.Application.ActiveDocument;
+                if (doc != null)
                 {
-                    var nwcModels = new System.Collections.Generic.List<string>();
-                    var allModels = new System.Collections.Generic.List<string>();
+                    var nwcNames = new System.Collections.Generic.List<string>();
+                    var allNames = new System.Collections.Generic.List<string>();
 
-                    foreach (Autodesk.Navisworks.Api.Model model in Autodesk.Navisworks.Api.Application.ActiveDocument.Models)
+                    foreach (Autodesk.Navisworks.Api.Model model in doc.Models)
                     {
                         string dispName = model.RootItem != null ? model.RootItem.DisplayName : "";
                         string srcName = model.SourceFileName ?? "";
-                        string name = !string.IsNullOrEmpty(dispName) ? dispName : System.IO.Path.GetFileNameWithoutExtension(srcName);
 
-                        if (!string.IsNullOrEmpty(name))
+                        // If it is a container model (ends with .nwd or .nwf), extract nested child models
+                        if (model.RootItem != null && (srcName.EndsWith(".nwd", StringComparison.OrdinalIgnoreCase) || 
+                                                       srcName.EndsWith(".nwf", StringComparison.OrdinalIgnoreCase) ||
+                                                       dispName.EndsWith(".nwd", StringComparison.OrdinalIgnoreCase) || 
+                                                       dispName.EndsWith(".nwf", StringComparison.OrdinalIgnoreCase)))
                         {
-                            allModels.Add(name);
-
-                            // Check if it is an NWC model
-                            if (srcName.EndsWith(".nwc", StringComparison.OrdinalIgnoreCase) || 
-                                dispName.EndsWith(".nwc", StringComparison.OrdinalIgnoreCase) ||
-                                srcName.IndexOf(".nwc", StringComparison.OrdinalIgnoreCase) >= 0 || 
-                                dispName.IndexOf(".nwc", StringComparison.OrdinalIgnoreCase) >= 0)
+                            foreach (Autodesk.Navisworks.Api.ModelItem child in model.RootItem.Children)
                             {
-                                nwcModels.Add(name);
+                                string childName = child.DisplayName;
+                                if (!string.IsNullOrEmpty(childName))
+                                {
+                                    allNames.Add(childName);
+                                    if (childName.EndsWith(".nwc", StringComparison.OrdinalIgnoreCase) || 
+                                        childName.IndexOf(".nwc", StringComparison.OrdinalIgnoreCase) >= 0)
+                                    {
+                                        nwcNames.Add(childName);
+                                    }
+                                }
+                            }
+                        }
+                        else
+                        {
+                            // Single top-level model
+                            string name = !string.IsNullOrEmpty(dispName) ? dispName : System.IO.Path.GetFileNameWithoutExtension(srcName);
+                            if (!string.IsNullOrEmpty(name))
+                            {
+                                allNames.Add(name);
+                                if (name.EndsWith(".nwc", StringComparison.OrdinalIgnoreCase) || 
+                                    name.IndexOf(".nwc", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                    srcName.EndsWith(".nwc", StringComparison.OrdinalIgnoreCase) ||
+                                    srcName.IndexOf(".nwc", StringComparison.OrdinalIgnoreCase) >= 0)
+                                {
+                                    nwcNames.Add(name);
+                                }
                             }
                         }
                     }
 
-                    var modelsToLoad = nwcModels.Count > 0 ? nwcModels : allModels;
+                    var modelsToLoad = nwcNames.Count > 0 ? nwcNames : allNames;
                     foreach (var m in modelsToLoad)
                     {
                         ComboModel.Items.Add(m);
@@ -1084,29 +1141,19 @@ namespace RUKN.Search.Plugin
 
             try
             {
-                if (Autodesk.Navisworks.Api.Application.ActiveDocument != null)
+                var targetItem = FindModelItem(selectedModelName);
+                if (targetItem != null)
                 {
-                    foreach (Autodesk.Navisworks.Api.Model model in Autodesk.Navisworks.Api.Application.ActiveDocument.Models)
+                    foreach (Autodesk.Navisworks.Api.ModelItem child in targetItem.Children)
                     {
-                        string modelName = model.RootItem != null ? model.RootItem.DisplayName : System.IO.Path.GetFileNameWithoutExtension(model.SourceFileName);
-                        if (modelName == selectedModelName)
+                        string levelName = child.DisplayName;
+                        if (!string.IsNullOrEmpty(levelName))
                         {
-                            if (model.RootItem != null)
-                            {
-                                foreach (Autodesk.Navisworks.Api.ModelItem child in model.RootItem.Children)
-                                {
-                                    string levelName = child.DisplayName;
-                                    if (!string.IsNullOrEmpty(levelName))
-                                    {
-                                        CheckBox cb = new CheckBox();
-                                        cb.Content = levelName;
-                                        cb.IsChecked = true;
-                                        cb.Margin = new Thickness(0, 0, 0, 8);
-                                        PanelLevels.Children.Add(cb);
-                                    }
-                                }
-                            }
-                            break;
+                            CheckBox cb = new CheckBox();
+                            cb.Content = levelName;
+                            cb.IsChecked = true;
+                            cb.Margin = new Thickness(0, 0, 0, 8);
+                            PanelLevels.Children.Add(cb);
                         }
                     }
                 }
