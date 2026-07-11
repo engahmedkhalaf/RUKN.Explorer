@@ -910,7 +910,7 @@ namespace RUKN.Search.Plugin
             var saveFileDialog = new Microsoft.Win32.SaveFileDialog
             {
                 Filter = "Excel Workbook (*.xlsx)|*.xlsx",
-                FileName = "Navisworks_Viewpoints_Report.xlsx"
+                FileName = "RUKN Insight Pro_Navisworks_Viewpoints_Report.xlsx"
             };
 
             if (saveFileDialog.ShowDialog() == true)
