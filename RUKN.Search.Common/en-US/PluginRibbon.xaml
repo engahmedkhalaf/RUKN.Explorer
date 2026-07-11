@@ -22,16 +22,6 @@
                             Orientation="Vertical"/>
             </RibbonPanelSource>
         </RibbonPanel>
-        <RibbonPanel x:Uid="RibbonPane1_2">
-            <RibbonPanelSource x:Uid="RibbonPanelSource_RibbonPanel_2" KeyTip="C2" Title="RUKN Quant">
-                <local:NWRibbonButton x:Uid="RUKNQuant" Id="RUKNQuant"
-                            Size="Large"
-                            KeyTip="B4"
-                            ShowText="True"
-                            Text="RUKN Quant"
-                            Orientation="Vertical"/>
-            </RibbonPanelSource>
-        </RibbonPanel>
     </RibbonTab>
 
 </RibbonControl>

@@ -13,7 +13,6 @@ namespace Rukn.Navisworks.Plugin.Common
     [RibbonLayout("PluginRibbon.xaml")]
     [RibbonTab("RUKNBIM", DisplayName = "RUKN Explorer")]
     [Command("ModelProcessing", Icon = "ElementID_16.ico", LargeIcon = "ElementID_32.png", ToolTip = "Model processing and viewpoint generation settings", DisplayName = "Model Processing")]
-    [Command("RUKNQuant", Icon = "ElementID_16.ico", LargeIcon = "ElementID_32.png", ToolTip = "RUKN Quant - Quantity Extraction", DisplayName = "RUKN Quant")]
     public class PluginRibbon : CommonCommandHandlerPlugin
     {
         public override int ExecuteCommand(string name, params string[] parameters)
@@ -48,25 +47,6 @@ namespace Rukn.Navisworks.Plugin.Common
                     catch (Exception ex)
                     {
                         MessageBox.Show("ups, something went wrong" + Environment.NewLine + ex.Message);
-                    }
-                    break;
-
-                case "RUKNQuant":
-                    try
-                    {
-                        if (!Autodesk.Navisworks.Api.Application.IsAutomated)
-                        {
-                            PluginBuilder pluginBuilder = new PluginBuilder("RUKNQuantPlugin");
-                            if (pluginBuilder.pluginRecord is CustomPluginRecord && pluginBuilder.pluginRecord.IsEnabled)
-                            {
-                                var loadedPlugin = pluginBuilder.pluginRecord.LoadedPlugin ?? pluginBuilder.pluginRecord.LoadPlugin();
-                                loadedPlugin.GetType().GetMethod("Execute")?.Invoke(loadedPlugin, new object[] { new string[0] });
-                            }
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        MessageBox.Show("Error starting RUKN Quant: " + ex.Message);
                     }
                     break;
             }
