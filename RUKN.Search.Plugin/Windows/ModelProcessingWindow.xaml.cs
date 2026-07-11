@@ -140,7 +140,17 @@ namespace RUKN.Search.Plugin
 
         private void ReadModels_Click(object sender, RoutedEventArgs e)
         {
-            TextBlockStatus.Text = "Reading models from source...";
+            try
+            {
+                TextBlockStatus.Text = "Refreshing models and levels from source...";
+                PopulateModels();
+                TextBlockStatus.Text = "Model source successfully refreshed!";
+            }
+            catch (Exception ex)
+            {
+                TextBlockStatus.Text = "Error refreshing: " + ex.Message;
+                MessageBox.Show("Failed to refresh models: " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private double ConvertToMeters(double value)
