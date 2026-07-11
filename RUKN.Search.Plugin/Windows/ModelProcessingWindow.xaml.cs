@@ -367,14 +367,16 @@ namespace RUKN.Search.Plugin
                 {
                     if (model.RootItem != null)
                     {
-                        if (model.RootItem.DisplayName == selectedModelName)
+                        string cleanRootName = System.IO.Path.GetFileNameWithoutExtension(model.RootItem.DisplayName ?? "");
+                        if (cleanRootName.Equals(selectedModelName, StringComparison.OrdinalIgnoreCase))
                         {
                             return model.RootItem;
                         }
                         
                         foreach (Autodesk.Navisworks.Api.ModelItem child in model.RootItem.Children)
                         {
-                            if (child.DisplayName == selectedModelName)
+                            string cleanChildName = System.IO.Path.GetFileNameWithoutExtension(child.DisplayName ?? "");
+                            if (cleanChildName.Equals(selectedModelName, StringComparison.OrdinalIgnoreCase))
                             {
                                 return child;
                             }
@@ -394,14 +396,16 @@ namespace RUKN.Search.Plugin
                 {
                     if (model.RootItem != null)
                     {
-                        if (model.RootItem.DisplayName == selectedModelName)
+                        string cleanRootName = System.IO.Path.GetFileNameWithoutExtension(model.RootItem.DisplayName ?? "");
+                        if (cleanRootName.Equals(selectedModelName, StringComparison.OrdinalIgnoreCase))
                         {
                             return model;
                         }
                         
                         foreach (Autodesk.Navisworks.Api.ModelItem child in model.RootItem.Children)
                         {
-                            if (child.DisplayName == selectedModelName)
+                            string cleanChildName = System.IO.Path.GetFileNameWithoutExtension(child.DisplayName ?? "");
+                            if (cleanChildName.Equals(selectedModelName, StringComparison.OrdinalIgnoreCase))
                             {
                                 return model;
                             }
@@ -1111,7 +1115,11 @@ namespace RUKN.Search.Plugin
                     var modelsToLoad = nwcNames.Count > 0 ? nwcNames : allNames;
                     foreach (var m in modelsToLoad)
                     {
-                        ComboModel.Items.Add(m);
+                        string cleanName = System.IO.Path.GetFileNameWithoutExtension(m);
+                        if (!ComboModel.Items.Contains(cleanName))
+                        {
+                            ComboModel.Items.Add(cleanName);
+                        }
                     }
                 }
             }
