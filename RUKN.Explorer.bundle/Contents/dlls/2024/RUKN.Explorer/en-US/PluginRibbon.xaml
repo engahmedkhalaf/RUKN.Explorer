@@ -20,6 +20,12 @@
                             ShowText="True"
                             Text="Model Processing"
                             Orientation="Vertical"/>
+                <local:NWRibbonButton x:Uid="LicenseAgreement" Id="LicenseAgreement"
+                            Size="Large"
+                            KeyTip="B4"
+                            ShowText="True"
+                            Text="License"
+                            Orientation="Vertical"/>
             </RibbonPanelSource>
         </RibbonPanel>
     </RibbonTab>

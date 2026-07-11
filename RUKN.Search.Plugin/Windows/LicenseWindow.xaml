@@ -1,0 +1,142 @@
+<Window x:Class="RUKN.Search.Plugin.Windows.LicenseWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        WindowStyle="None"
+        WindowStartupLocation="CenterOwner"
+        AllowsTransparency="True"
+        Background="{x:Null}"
+        Width="500"
+        Height="600"
+        Title="Software License Agreement"
+        Style="{DynamicResource CustomWindowStyle}">
+
+    <Window.Resources>
+        <ResourceDictionary Source="Resources.xaml"/>
+    </Window.Resources>
+
+    <Window.InputBindings>
+        <KeyBinding Key="Escape" Command="Close" />
+    </Window.InputBindings>
+
+    <Window.CommandBindings>
+        <CommandBinding Command="Close" Executed="Close_Button" />
+    </Window.CommandBindings>
+
+    <Border Background="{DynamicResource BackgroundColor}"
+            BorderBrush="Transparent"
+            BorderThickness="1"
+            CornerRadius="15"
+            Margin="10"
+            MouseDown="Border_MouseDown">
+        <Border.Effect>
+            <DropShadowEffect BlurRadius="20" Color="Gray" Opacity="0.3" ShadowDepth="0" Direction="0" />
+        </Border.Effect>
+
+        <Grid Margin="20">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" /> <!-- Header -->
+                <RowDefinition Height="Auto" /> <!-- Separator -->
+                <RowDefinition Height="*" />    <!-- Content -->
+                <RowDefinition Height="Auto" /> <!-- Footer button -->
+            </Grid.RowDefinitions>
+
+            <!-- Header -->
+            <Grid Grid.Row="0" Margin="0,-4,0,10">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <Image Source="/RUKN.Explorer;component/Resources/SelectByRevitId.png"
+                           Height="28"
+                           Stretch="Uniform"
+                           SnapsToDevicePixels="True"
+                           RenderOptions.BitmapScalingMode="HighQuality" />
+                    <TextBlock Text="LICENSE AGREEMENT" 
+                               Foreground="#18263c" 
+                               FontWeight="Bold" 
+                               FontSize="16" 
+                               VerticalAlignment="Center" 
+                               Margin="10,0,0,0"/>
+                </StackPanel>
+
+                <Button Style="{DynamicResource TabCloseButtonStyle}"
+                        Click="Close_Button"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Center" />
+            </Grid>
+
+            <!-- Separator Line -->
+            <Line Grid.Row="1" 
+                  Stroke="{DynamicResource MainGray}"
+                  X2="1000"
+                  Opacity="0.3"
+                  StrokeThickness="2"
+                  Margin="-20,0,-20,15" />
+
+            <!-- Content (License Agreement Text) -->
+            <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Margin="0,0,0,15">
+                <TextBlock TextWrapping="Wrap" FontSize="12.5" Foreground="#333333" LineHeight="18">
+                    <Run FontSize="14" FontWeight="Bold" Foreground="#1B6ECE">RUKNBIM Software License Agreement</Run>
+                    <LineBreak/><LineBreak/>
+                    This Software License Agreement (the "Agreement") is a legal agreement between you (either an individual or a single entity, "Licensee") and <Bold>RUKNBIM</Bold> ("Licensor") for the <Bold>RUKNBIM Smart Select</Bold> software plug-in, including all associated media, printed materials, and electronic documentation (collectively, the "Software").
+                    <LineBreak/><LineBreak/>
+                    By installing, copying, or otherwise using the Software, you agree to be bound by the terms of this Agreement. If you do not agree to the terms of this Agreement, do not install or use the Software.
+                    <LineBreak/><LineBreak/>
+                    <Run FontWeight="Bold" Foreground="#18263c" FontSize="13">1. Grant of License</Run>
+                    <LineBreak/><LineBreak/>
+                    <Run FontWeight="Bold">A. Trial License</Run>
+                    <LineBreak/>
+                    If you register for a free trial of the Software, Licensor grants you a non-exclusive, non-transferable, limited license to install and use one (1) copy of the Software for evaluation purposes only, for a period of fourteen (14) days from the date of trial registration.
+                    <LineBreak/><LineBreak/>
+                    <Run FontWeight="Bold">B. Single-User Paid License</Run>
+                    <LineBreak/>
+                    Upon activation with a valid license key, Licensor grants you a non-exclusive, non-transferable license to install and use the Software on a single computer at any given time. A single-user license key may be deactivated on one machine and transferred to another computer owned or controlled by the same Licensee.
+                    <LineBreak/><LineBreak/>
+                    <Run FontWeight="Bold" Foreground="#18263c" FontSize="13">2. Restrictions</Run>
+                    <LineBreak/><LineBreak/>
+                    Licensee shall not, and shall not permit any third party to:
+                    <LineBreak/>
+                    • Reverse engineer, decompile, or disassemble the Software.
+                    <LineBreak/>
+                    • Modify, adapt, translate, rent, lease, resell, or distribute the Software.
+                    <LineBreak/>
+                    • Bypass, modify, defeat, or circumvent any licensing verification systems or security features of the Software.
+                    <LineBreak/>
+                    • Create derivative works based on the Software.
+                    <LineBreak/><LineBreak/>
+                    <Run FontWeight="Bold" Foreground="#18263c" FontSize="13">3. Intellectual Property Rights</Run>
+                    <LineBreak/><LineBreak/>
+                    The Software is protected by copyright laws and international treaty provisions. All title and intellectual property rights in and to the Software (including but not limited to any images, animations, video, audio, music, and text incorporated into the Software) are owned by <Bold>RUKNBIM</Bold>. All rights not explicitly granted are reserved by Licensor.
+                    <LineBreak/><LineBreak/>
+                    <Run FontWeight="Bold" Foreground="#18263c" FontSize="13">4. Support and Updates</Run>
+                    <LineBreak/><LineBreak/>
+                    Licensor may provide support services and software updates at its discretion. Automated update notifications may be displayed inside the Software when a newer version is released.
+                    <LineBreak/><LineBreak/>
+                    <Run FontWeight="Bold" Foreground="#18263c" FontSize="13">5. Disclaimer of Warranty</Run>
+                    <LineBreak/><LineBreak/>
+                    THE SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE ENTIRE RISK AS TO THE QUALITY AND PERFORMANCE OF THE SOFTWARE IS WITH THE LICENSEE.
+                    <LineBreak/><LineBreak/>
+                    <Run FontWeight="Bold" Foreground="#18263c" FontSize="13">6. Limitation of Liability</Run>
+                    <LineBreak/><LineBreak/>
+                    IN NO EVENT SHALL LICENSOR BE LIABLE FOR ANY SPECIAL, INCIDENTAL, INDIRECT, OR CONSEQUENTIAL DAMAGES WHATSOEVER (INCLUDING, WITHOUT LIMITATION, DAMAGES FOR LOSS OF BUSINESS PROFITS, BUSINESS INTERRUPTION, LOSS OF BUSINESS INFORMATION, OR ANY OTHER PECUNIARY LOSS) ARISING OUT OF THE USE OF OR INABILITY TO USE THE SOFTWARE.
+                    <LineBreak/><LineBreak/>
+                    <Run FontWeight="Bold" Foreground="#18263c" FontSize="13">7. Contact Information</Run>
+                    <LineBreak/><LineBreak/>
+                    For sales inquiries, activation codes, or support requests, please contact:
+                    <LineBreak/>
+                    • <Run FontWeight="Bold">Email</Run>: sales@ruknbim.com
+                    <LineBreak/>
+                    • <Run FontWeight="Bold">Support</Run>: support@ruknbim.com
+                    <LineBreak/>
+                    • <Run FontWeight="Bold">Website</Run>: www.ruknbim.com
+                </TextBlock>
+            </ScrollViewer>
+
+            <!-- Footer button -->
+            <Button Grid.Row="3" 
+                    Content="I Accept" 
+                    Click="Close_Button" 
+                    Height="35" 
+                    Width="120"
+                    HorizontalAlignment="Right"
+                    Style="{DynamicResource MainButtonBlueStyle}"/>
+        </Grid>
+    </Border>
+</Window>

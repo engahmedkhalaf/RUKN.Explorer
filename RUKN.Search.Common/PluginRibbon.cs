@@ -2,6 +2,7 @@ using Autodesk.Navisworks.Api.Plugins;
 using RUKN.Search.Common.Application;
 using RUKN.Search.Common.Utils;
 using RUKN.Search.Plugin;
+using RUKN.Search.Plugin.Windows;
 using System;
 using System.IO;
 using System.Reflection;
@@ -13,6 +14,7 @@ namespace Rukn.Navisworks.Plugin.Common
     [RibbonLayout("PluginRibbon.xaml")]
     [RibbonTab("RUKNBIM", DisplayName = "RUKN Insight Pro")]
     [Command("ModelProcessing", Icon = "ElementID_16.ico", LargeIcon = "ElementID_32.png", ToolTip = "Model processing and viewpoint generation settings", DisplayName = "Model Processing")]
+    [Command("LicenseAgreement", Icon = "ElementID_16.ico", LargeIcon = "ElementID_32.png", ToolTip = "RUKNBIM Software License Agreement", DisplayName = "License")]
     public class PluginRibbon : CommonCommandHandlerPlugin
     {
         public override int ExecuteCommand(string name, params string[] parameters)
@@ -47,6 +49,24 @@ namespace Rukn.Navisworks.Plugin.Common
                     catch (Exception ex)
                     {
                         MessageBox.Show("ups, something went wrong" + Environment.NewLine + ex.Message);
+                    }
+                    break;
+
+                case "LicenseAgreement":
+                    try
+                    {
+                        if (!Autodesk.Navisworks.Api.Application.IsAutomated)
+                        {
+                            LicenseWindow licenseWindow = new LicenseWindow();
+                            var hwnd = Autodesk.Navisworks.Api.Application.Gui.MainWindow.Handle;
+                            var helper = new System.Windows.Interop.WindowInteropHelper(licenseWindow);
+                            helper.Owner = hwnd;
+                            licenseWindow.ShowDialog();
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show("Failed to open License Agreement: " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                     }
                     break;
             }
