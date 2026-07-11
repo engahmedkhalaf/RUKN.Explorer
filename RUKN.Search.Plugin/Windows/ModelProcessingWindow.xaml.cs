@@ -750,40 +750,119 @@ namespace RUKN.Search.Plugin
             }
         }
 
-        private void ExportData_Click(object sender, RoutedEventArgs e)
+        private class ViewpointReportItem
         {
-            if (ComboModel.SelectedItem == null)
-            {
-                TextBlockStatus.Text = "Error: No model selected.";
-                return;
-            }
+            public string Name { get; set; }
+            public string Path { get; set; }
+            public string ModelName { get; set; } = "N/A";
+            public string Level { get; set; } = "N/A";
+            public string TopZ { get; set; } = "N/A";
+            public string BottomZ { get; set; } = "N/A";
+        }
 
-            string selectedModel = ComboModel.SelectedItem.ToString();
-            if (selectedModel == "No models loaded")
-            {
-                TextBlockStatus.Text = "Error: No models loaded.";
-                return;
-            }
+        private void CollectViewpoints(Autodesk.Navisworks.Api.SavedItem item, string parentPath, System.Collections.Generic.List<ViewpointReportItem> results)
+        {
+            string currentPath = string.IsNullOrEmpty(parentPath) ? item.DisplayName : parentPath + "/" + item.DisplayName;
 
-            // Find all levels
-            var levelsList = new System.Collections.Generic.List<string>();
-            var checkedSet = new System.Collections.Generic.HashSet<string>();
-            foreach (var child in PanelLevels.Children)
+            if (item.IsGroup)
             {
-                if (child is CheckBox cb)
+                var group = (Autodesk.Navisworks.Api.GroupItem)item;
+                foreach (var child in group.Children)
                 {
-                    string levelName = cb.Content.ToString();
-                    levelsList.Add(levelName);
-                    if (cb.IsChecked == true)
-                    {
-                        checkedSet.Add(levelName);
-                    }
+                    CollectViewpoints(child, currentPath, results);
                 }
             }
-
-            if (levelsList.Count == 0)
+            else
             {
-                TextBlockStatus.Text = "Error: No levels found to export.";
+                results.Add(new ViewpointReportItem
+                {
+                    Name = item.DisplayName,
+                    Path = parentPath
+                });
+            }
+        }
+
+        private ViewpointReportItem ParseViewpointName(string displayName, string path)
+        {
+            var item = new ViewpointReportItem
+            {
+                Name = displayName,
+                Path = path
+            };
+
+            try
+            {
+                // Format: {ModelName} - {Level} (Top Z: {topZ}, Bottom Z: {bottomZ})
+                if (displayName.Contains("(Top Z:") && displayName.Contains("Bottom Z:"))
+                {
+                    int parenIndex = displayName.IndexOf('(');
+                    if (parenIndex > 0)
+                    {
+                        string mainPart = displayName.Substring(0, parenIndex).Trim();
+                        string offsetPart = displayName.Substring(parenIndex).Trim();
+
+                        // Parse main part
+                        int dashIndex = mainPart.IndexOf(" - ");
+                        if (dashIndex > 0)
+                        {
+                            item.ModelName = mainPart.Substring(0, dashIndex).Trim();
+                            item.Level = mainPart.Substring(dashIndex + 3).Trim();
+                        }
+                        else
+                        {
+                            item.Level = mainPart;
+                        }
+
+                        // Parse offset part: (Top Z: -2m, Bottom Z: -5m)
+                        string cleanedOffsets = offsetPart.Replace("(", "").Replace(")", "").Trim();
+                        string[] parts = cleanedOffsets.Split(',');
+                        foreach (var part in parts)
+                        {
+                            string kv = part.Trim();
+                            if (kv.StartsWith("Top Z:", StringComparison.OrdinalIgnoreCase))
+                            {
+                                item.TopZ = kv.Substring(6).Trim();
+                            }
+                            else if (kv.StartsWith("Bottom Z:", StringComparison.OrdinalIgnoreCase))
+                            {
+                                item.BottomZ = kv.Substring(9).Trim();
+                            }
+                        }
+                    }
+                }
+                else if (displayName.Contains(" : "))
+                {
+                    // Fallback parse: WPH-MBU-MOD-3DM-BWK-00-WHM-50001.rvt : TOWER IIII : location QIC Shar
+                    string[] split = displayName.Split(new[] { " : " }, StringSplitOptions.None);
+                    if (split.Length > 0) item.ModelName = split[0].Trim();
+                    if (split.Length > 1) item.Level = split[1].Trim();
+                }
+            }
+            catch { }
+
+            return item;
+        }
+
+        private void ExportData_Click(object sender, RoutedEventArgs e)
+        {
+            var doc = Autodesk.Navisworks.Api.Application.ActiveDocument;
+            if (doc == null || doc.SavedViewpoints == null)
+            {
+                TextBlockStatus.Text = "Error: No active document or viewpoints.";
+                return;
+            }
+
+            // Collect all saved viewpoints recursively
+            var viewpoints = new System.Collections.Generic.List<ViewpointReportItem>();
+            foreach (var item in doc.SavedViewpoints.Value)
+            {
+                CollectViewpoints(item, "", viewpoints);
+            }
+
+            if (viewpoints.Count == 0)
+            {
+                TextBlockStatus.Text = "Error: No saved viewpoints found to export.";
+                MessageBox.Show("No saved viewpoints found in the active model.", "Information", MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
 
@@ -791,52 +870,35 @@ namespace RUKN.Search.Plugin
             var saveFileDialog = new Microsoft.Win32.SaveFileDialog
             {
                 Filter = "Excel CSV File (*.csv)|*.csv",
-                FileName = $"{selectedModel}_Levels_Report.csv"
+                FileName = "Navisworks_Viewpoints_Takeoff_Report.csv"
             };
 
             if (saveFileDialog.ShowDialog() == true)
             {
                 try
                 {
-                    PrecacheLevelElevations(selectedModel);
-
                     using (var writer = new System.IO.StreamWriter(saveFileDialog.FileName, false, System.Text.Encoding.UTF8))
                     {
+                        // Enable automatic column separators in Excel
                         writer.WriteLine("sep=,");
-                        writer.WriteLine("RUKN EXPLORER - MODEL LEVELS REPORT");
-                        writer.WriteLine($"Model Name: {selectedModel}");
+                        writer.WriteLine("RUKN EXPLORER - ENHANCED VIEWPOINTS REPORT");
+                        writer.WriteLine($"Total Viewpoints: {viewpoints.Count}");
                         writer.WriteLine($"Exported Date: {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
                         writer.WriteLine();
 
-                        string unit = GetUnitText();
-                        writer.WriteLine($"Level Name,Elevation (m),Elevation ({unit}),Checked Status,Top Offset ({unit}),Bottom Offset ({unit})");
+                        writer.WriteLine("Folder Path,Viewpoint Display Name,Model/Source File,BIM Level,Top Offset,Bottom Offset");
 
-                        string topOffsetStr = CheckOffsetTop.IsChecked == true ? TextOffsetTop.Text : "N/A";
-                        string bottomOffsetStr = CheckOffsetBottom.IsChecked == true ? TextOffsetBottom.Text : "N/A";
-
-                        foreach (string levelName in levelsList)
+                        foreach (var vp in viewpoints)
                         {
-                            double? elMeters = GetLevelElevation(selectedModel, levelName);
-                            string elMetersStr = elMeters.HasValue ? elMeters.Value.ToString("F3") : "N/A";
-                            string elUnitsStr = "N/A";
-
-                            if (elMeters.HasValue)
-                            {
-                                double converted = elMeters.Value;
-                                // Convert from meters to selected units
-                                if (RadioMM.IsChecked == true) converted *= 1000.0;
-                                else if (RadioCM.IsChecked == true) converted *= 100.0;
-                                else if (RadioFT.IsChecked == true) converted /= 0.3048;
-                                elUnitsStr = converted.ToString("F3");
-                            }
-
-                            string isChecked = checkedSet.Contains(levelName) ? "Checked" : "Unchecked";
-
-                            writer.WriteLine($"\"{levelName.Replace("\"", "\"\"")}\",{elMetersStr},{elUnitsStr},{isChecked},{topOffsetStr},{bottomOffsetStr}");
+                            var parsed = ParseViewpointName(vp.Name, vp.Path);
+                            
+                            string folderPath = string.IsNullOrEmpty(parsed.Path) ? "Root" : parsed.Path;
+                            
+                            writer.WriteLine($"\"{folderPath.Replace("\"", "\"\"")}\",\"{(parsed.Name ?? "").Replace("\"", "\"\"")}\",\"{(parsed.ModelName ?? "").Replace("\"", "\"\"")}\",\"{(parsed.Level ?? "").Replace("\"", "\"\"")}\",\"{(parsed.TopZ ?? "").Replace("\"", "\"\"")}\",\"{(parsed.BottomZ ?? "").Replace("\"", "\"\"")}\"");
                         }
                     }
 
-                    TextBlockStatus.Text = "Successfully exported level data to CSV!";
+                    TextBlockStatus.Text = $"Successfully exported {viewpoints.Count} viewpoint(s) to Excel CSV!";
                     
                     // Automatically open the exported CSV file in Excel/Default handler!
                     System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(saveFileDialog.FileName) { UseShellExecute = true });
