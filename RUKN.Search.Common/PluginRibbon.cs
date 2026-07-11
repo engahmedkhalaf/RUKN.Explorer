@@ -13,8 +13,8 @@ namespace Rukn.Navisworks.Plugin.Common
     [Plugin("SelectByRevitIdRibbon", IdentityInformation.DeveloperID, DisplayName = "RUKN Insight Pro")]
     [RibbonLayout("PluginRibbon.xaml")]
     [RibbonTab("RUKNBIM", DisplayName = "RUKN Insight Pro")]
-    [Command("ModelProcessing", Icon = "ElementID_16.ico", LargeIcon = "ElementID_32.png", ToolTip = "Model processing and viewpoint generation settings", DisplayName = "Model Processing")]
-    [Command("LicenseAgreement", Icon = "ElementID_16.ico", LargeIcon = "ElementID_32.png", ToolTip = "RUKNBIM Software License Agreement", DisplayName = "License")]
+    [Command("ModelProcessing", Icon = "ModelProcessing_16.png", LargeIcon = "ModelProcessing_32.png", ToolTip = "Model processing and viewpoint generation settings", DisplayName = "Model Processing")]
+    [Command("LicenseAgreement", Icon = "License_16.png", LargeIcon = "License_32.png", ToolTip = "RUKNBIM Software License Agreement", DisplayName = "License")]
     public class PluginRibbon : CommonCommandHandlerPlugin
     {
         public override int ExecuteCommand(string name, params string[] parameters)
