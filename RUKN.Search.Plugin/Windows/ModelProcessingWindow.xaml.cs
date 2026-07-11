@@ -866,47 +866,75 @@ namespace RUKN.Search.Plugin
                 return;
             }
 
-            // Open Save File Dialog
+            // Open Save File Dialog for XLSX
             var saveFileDialog = new Microsoft.Win32.SaveFileDialog
             {
-                Filter = "Excel CSV File (*.csv)|*.csv",
-                FileName = "Navisworks_Viewpoints_Takeoff_Report.csv"
+                Filter = "Excel Workbook (*.xlsx)|*.xlsx",
+                FileName = "Navisworks_Viewpoints_Takeoff_Report.xlsx"
             };
 
             if (saveFileDialog.ShowDialog() == true)
             {
+                string filePath = saveFileDialog.FileName;
+                TextBlockStatus.Text = "Exporting to Excel...";
+
                 try
                 {
-                    using (var writer = new System.IO.StreamWriter(saveFileDialog.FileName, false, System.Text.Encoding.UTF8))
+                    Type excelType = Type.GetTypeFromProgID("Excel.Application");
+                    if (excelType == null)
                     {
-                        // Enable automatic column separators in Excel
-                        writer.WriteLine("sep=,");
-                        writer.WriteLine("RUKN EXPLORER - ENHANCED VIEWPOINTS REPORT");
-                        writer.WriteLine($"Total Viewpoints: {viewpoints.Count}");
-                        writer.WriteLine($"Exported Date: {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
-                        writer.WriteLine();
-
-                        writer.WriteLine("Folder Path,Viewpoint Display Name,Model/Source File,BIM Level,Top Offset,Bottom Offset");
-
-                        foreach (var vp in viewpoints)
-                        {
-                            var parsed = ParseViewpointName(vp.Name, vp.Path);
-                            
-                            string folderPath = string.IsNullOrEmpty(parsed.Path) ? "Root" : parsed.Path;
-                            
-                            writer.WriteLine($"\"{folderPath.Replace("\"", "\"\"")}\",\"{(parsed.Name ?? "").Replace("\"", "\"\"")}\",\"{(parsed.ModelName ?? "").Replace("\"", "\"\"")}\",\"{(parsed.Level ?? "").Replace("\"", "\"\"")}\",\"{(parsed.TopZ ?? "").Replace("\"", "\"\"")}\",\"{(parsed.BottomZ ?? "").Replace("\"", "\"\"")}\"");
-                        }
+                        throw new Exception("Microsoft Excel is not installed on this system.");
                     }
 
-                    TextBlockStatus.Text = $"Successfully exported {viewpoints.Count} viewpoint(s) to Excel CSV!";
-                    
-                    // Automatically open the exported CSV file in Excel/Default handler!
-                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(saveFileDialog.FileName) { UseShellExecute = true });
+                    dynamic excel = Activator.CreateInstance(excelType);
+                    excel.Visible = true; // Show Excel to the user
+                    dynamic workbooks = excel.Workbooks;
+                    dynamic workbook = workbooks.Add();
+                    dynamic sheet = workbook.ActiveSheet;
+                    sheet.Name = "Viewpoints Report";
+
+                    // Write Headers
+                    sheet.Cells[1, 1] = "Folder Path";
+                    sheet.Cells[1, 2] = "Viewpoint Display Name";
+                    sheet.Cells[1, 3] = "Model/Source File";
+                    sheet.Cells[1, 4] = "BIM Level";
+                    sheet.Cells[1, 5] = "Top Offset";
+                    sheet.Cells[1, 6] = "Bottom Offset";
+
+                    // Style Headers (First Row: A1 to F1)
+                    dynamic headerRange = sheet.Range["A1", "F1"];
+                    headerRange.Font.Bold = true;
+                    headerRange.Font.Color = 16777215; // White text (#FFFFFF)
+                    headerRange.Interior.Color = 13528603; // Brand Blue (#1B6ECE)
+
+                    int row = 2;
+                    foreach (var vp in viewpoints)
+                    {
+                        var parsed = ParseViewpointName(vp.Name, vp.Path);
+                        string folderPath = string.IsNullOrEmpty(parsed.Path) ? "Root" : parsed.Path;
+
+                        sheet.Cells[row, 1] = folderPath;
+                        sheet.Cells[row, 2] = parsed.Name ?? "";
+                        sheet.Cells[row, 3] = parsed.ModelName ?? "";
+                        sheet.Cells[row, 4] = parsed.Level ?? "";
+                        sheet.Cells[row, 5] = parsed.TopZ ?? "";
+                        sheet.Cells[row, 6] = parsed.BottomZ ?? "";
+                        row++;
+                    }
+
+                    // Auto-fit columns
+                    dynamic allColumns = sheet.Columns;
+                    allColumns.AutoFit();
+
+                    // Save the workbook
+                    workbook.SaveAs(filePath);
+
+                    TextBlockStatus.Text = $"Successfully exported {viewpoints.Count} viewpoints to Excel!";
                 }
                 catch (Exception ex)
                 {
                     TextBlockStatus.Text = "Export failed: " + ex.Message;
-                    MessageBox.Show("Export failed: " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show("Excel Export failed: " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
         }
