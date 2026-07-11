@@ -742,7 +742,101 @@ namespace RUKN.Search.Plugin
 
         private void ExportData_Click(object sender, RoutedEventArgs e)
         {
-            TextBlockStatus.Text = "Exporting data...";
+            if (ComboModel.SelectedItem == null)
+            {
+                TextBlockStatus.Text = "Error: No model selected.";
+                return;
+            }
+
+            string selectedModel = ComboModel.SelectedItem.ToString();
+            if (selectedModel == "No models loaded")
+            {
+                TextBlockStatus.Text = "Error: No models loaded.";
+                return;
+            }
+
+            // Find all levels
+            var levelsList = new System.Collections.Generic.List<string>();
+            var checkedSet = new System.Collections.Generic.HashSet<string>();
+            foreach (var child in PanelLevels.Children)
+            {
+                if (child is CheckBox cb)
+                {
+                    string levelName = cb.Content.ToString();
+                    levelsList.Add(levelName);
+                    if (cb.IsChecked == true)
+                    {
+                        checkedSet.Add(levelName);
+                    }
+                }
+            }
+
+            if (levelsList.Count == 0)
+            {
+                TextBlockStatus.Text = "Error: No levels found to export.";
+                return;
+            }
+
+            // Open Save File Dialog
+            var saveFileDialog = new Microsoft.Win32.SaveFileDialog
+            {
+                Filter = "Excel CSV File (*.csv)|*.csv",
+                FileName = $"{selectedModel}_Levels_Report.csv"
+            };
+
+            if (saveFileDialog.ShowDialog() == true)
+            {
+                try
+                {
+                    PrecacheLevelElevations(selectedModel);
+
+                    using (var writer = new System.IO.StreamWriter(saveFileDialog.FileName, false, System.Text.Encoding.UTF8))
+                    {
+                        writer.WriteLine("sep=,");
+                        writer.WriteLine("RUKN EXPLORER - MODEL LEVELS REPORT");
+                        writer.WriteLine($"Model Name: {selectedModel}");
+                        writer.WriteLine($"Exported Date: {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+                        writer.WriteLine();
+
+                        string unit = GetUnitText();
+                        writer.WriteLine($"Level Name,Elevation (m),Elevation ({unit}),Checked Status,Top Offset ({unit}),Bottom Offset ({unit})");
+
+                        string topOffsetStr = CheckOffsetTop.IsChecked == true ? TextOffsetTop.Text : "N/A";
+                        string bottomOffsetStr = CheckOffsetBottom.IsChecked == true ? TextOffsetBottom.Text : "N/A";
+
+                        foreach (string levelName in levelsList)
+                        {
+                            double? elMeters = GetLevelElevation(selectedModel, levelName);
+                            string elMetersStr = elMeters.HasValue ? elMeters.Value.ToString("F3") : "N/A";
+                            string elUnitsStr = "N/A";
+
+                            if (elMeters.HasValue)
+                            {
+                                double converted = elMeters.Value;
+                                // Convert from meters to selected units
+                                if (RadioMM.IsChecked == true) converted *= 1000.0;
+                                else if (RadioCM.IsChecked == true) converted *= 100.0;
+                                else if (RadioFT.IsChecked == true) converted /= 0.3048;
+                                elUnitsStr = converted.ToString("F3");
+                            }
+
+                            string isChecked = checkedSet.Contains(levelName) ? "Checked" : "Unchecked";
+
+                            writer.WriteLine($"\"{levelName.Replace("\"", "\"\"")}\",{elMetersStr},{elUnitsStr},{isChecked},{topOffsetStr},{bottomOffsetStr}");
+                        }
+                    }
+
+                    TextBlockStatus.Text = "Successfully exported level data to CSV!";
+                    
+                    // Automatically open the exported CSV file in Excel/Default handler!
+                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(saveFileDialog.FileName) { UseShellExecute = true });
+                }
+                catch (Exception ex)
+                {
+                    TextBlockStatus.Text = "Export failed: " + ex.Message;
+                    MessageBox.Show("Export failed: " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
         }
 
         private void ResetFullMode_Click(object sender, RoutedEventArgs e)

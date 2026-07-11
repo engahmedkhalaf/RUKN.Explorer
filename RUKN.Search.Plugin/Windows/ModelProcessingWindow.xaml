@@ -195,29 +195,29 @@
                 </Grid.RowDefinitions>
 
                 <Button Style="{DynamicResource ApplyButtonStyle}" 
-                        Content="Clear Saved Views" 
-                        Click="ClearSavedViews_Click"
+                        Content="Generate Viewpoints" 
+                        Click="GenerateViewpoints_Click"
                         Height="34" 
                         Margin="0,0,5,8"
                         Grid.Row="0" Grid.Column="0"/>
                 
                 <Button Style="{DynamicResource ApplyButtonStyle}" 
-                        Content="Export Data" 
-                        Click="ExportData_Click"
+                        Content="Read Models" 
+                        Click="ReadModels_Click"
                         Height="34" 
                         Margin="5,0,0,8"
                         Grid.Row="0" Grid.Column="1"/>
 
                 <Button Style="{DynamicResource ApplyButtonStyle}" 
-                        Content="Generate Viewpoints" 
-                        Click="GenerateViewpoints_Click"
+                        Content="Clear Saved Views" 
+                        Click="ClearSavedViews_Click"
                         Height="34" 
                         Margin="0,0,5,8"
                         Grid.Row="1" Grid.Column="0"/>
 
                 <Button Style="{DynamicResource ApplyButtonStyle}" 
-                        Content="Read Models" 
-                        Click="ReadModels_Click"
+                        Content="Export Data" 
+                        Click="ExportData_Click"
                         Height="34" 
                         Margin="5,0,0,8"
                         Grid.Row="1" Grid.Column="1"/>
