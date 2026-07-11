@@ -17,7 +17,7 @@ namespace RUKN.Search.Plugin.Windows
         {
         }
 
-        private void BtnStartTrial_Click(object sender, RoutedEventArgs e)
+        private async void BtnStartTrial_Click(object sender, RoutedEventArgs e)
         {
             string email = EmailInput.Text.Trim();
             if (string.IsNullOrEmpty(email) || !email.Contains("@"))
@@ -28,6 +28,10 @@ namespace RUKN.Search.Plugin.Windows
 
             SettingsConfig.SetValue("TrialStartDate", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
             SettingsConfig.SetValue("LicenseEmail", email);
+
+            // Best-effort: mirror the trial into Supabase so it's visible alongside paid licenses.
+            // The local trial clock above already started, so a network failure here doesn't block anything.
+            await RUKN.Search.Plugin.Utils.SupabaseLicensing.RegisterTrialAsync(email, System.Environment.MachineName);
 
             MessageBox.Show("14-day Free Trial started successfully!", "Trial Activated", MessageBoxButton.OK, MessageBoxImage.Information);
             IsTrialStarted = true;

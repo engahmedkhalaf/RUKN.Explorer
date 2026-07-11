@@ -22,6 +22,19 @@ namespace RUKN.Search.Plugin
 
         private static readonly object _locker = new object();
 
+        // Defaults are also merged into existing config files on startup,
+        // so machines with an older config still receive newly added keys.
+        private static readonly Dictionary<string, string> _defaults = new Dictionary<string, string>
+        {
+            { "runs",   "0"  },
+            { "version",   currentVersion  },
+            { "user",   "user01"  },
+            { "release",   "0"  },
+            { "apikey",   "0"  },
+            { "SupabaseUrl", "https://auvtapbsdewwmzejchgq.supabase.co" },
+            { "SupabaseAnonKey", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF1dnRhcGJzZGV3d216ZWpjaGdxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1MTQ2MjksImV4cCI6MjA5NzA5MDYyOX0.u5S9vIBU-RQ5XOIT_FAohOdyVyW7NjknkkVwCorLWe8" }
+        };
+
         static SettingsConfig()
         {
             // Ensure folder exists
@@ -31,6 +44,51 @@ namespace RUKN.Search.Plugin
             // Ensure file exists with defaults
             if (!File.Exists(_configFile))
                 CreateDefaultConfig();
+
+            EnsureDefaultKeys();
+        }
+
+        /// <summary>
+        /// Adds any default keys missing from an existing config file, and replaces
+        /// the old anon-key placeholder so pre-existing installs pick up the real key.
+        /// </summary>
+        private static void EnsureDefaultKeys()
+        {
+            lock (_locker)
+            {
+                try
+                {
+                    Configuration config = OpenConfig();
+                    KeyValueConfigurationCollection settings = config.AppSettings.Settings;
+                    bool changed = false;
+
+                    foreach (var kvp in _defaults)
+                    {
+                        if (settings[kvp.Key] == null)
+                        {
+                            settings.Add(kvp.Key, kvp.Value);
+                            changed = true;
+                        }
+                    }
+
+                    if (settings["SupabaseAnonKey"] != null &&
+                        settings["SupabaseAnonKey"].Value == "YOUR_SUPABASE_ANON_KEY")
+                    {
+                        settings["SupabaseAnonKey"].Value = _defaults["SupabaseAnonKey"];
+                        changed = true;
+                    }
+
+                    if (changed)
+                    {
+                        config.Save(ConfigurationSaveMode.Modified);
+                        ConfigurationManager.RefreshSection("appSettings");
+                    }
+                }
+                catch
+                {
+                    // Never block plugin startup on config migration
+                }
+            }
         }
 
         public static string GetValue(string key)
@@ -92,19 +150,6 @@ namespace RUKN.Search.Plugin
         /// </summary>
         private static void CreateDefaultConfig()
         {
-            // Your requested defaults (removed the duplicated "runs" key to avoid errors).
-            var defaults = new Dictionary<string, string>
-            {
-                { "runs",   "0"  },
-                { "version",   currentVersion  },
-                { "user",   "user01"  },
-                { "release",   "0"  },
-                { "apikey",   "0"  },
-                { "SupabaseUrl", "https://auvtapbsdewwmzejchgq.supabase.co" },
-                { "SupabaseAnonKey", "YOUR_SUPABASE_ANON_KEY" }
-            };
-
-
             var doc = new XmlDocument();
             var decl = doc.CreateXmlDeclaration("1.0", "utf-8", null);
             doc.AppendChild(decl);
@@ -115,7 +160,7 @@ namespace RUKN.Search.Plugin
             XmlElement appSettings = doc.CreateElement("appSettings");
             configuration.AppendChild(appSettings);
 
-            foreach (var kvp in defaults)
+            foreach (var kvp in _defaults)
             {
                 XmlElement add = doc.CreateElement("add");
                 add.SetAttribute("key", kvp.Key);
