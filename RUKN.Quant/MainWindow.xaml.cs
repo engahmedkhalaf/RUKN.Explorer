@@ -116,12 +116,12 @@ namespace RUKN.Quant
                     Family = PropertyHelper.GetPropertyStringDeep(item, "Element", new[] { "Family", "Family Name" }),
                     Type = PropertyHelper.GetPropertyStringDeep(item, "Element", new[] { "Type", "Type Name" }),
                     RevitId = PropertyHelper.GetRevitIdDeep(item),
-                    Length = PropertyHelper.GetQuantityDoubleDeep(item, new[] { "Element", "Quantification" }, new[] { "Length", "Length Value", "Height", "Cut Length", "ModelLength" }),
-                    Area = PropertyHelper.GetQuantityDoubleDeep(item, new[] { "Element", "Quantification" }, new[] { "Area", "Area Value", "Gross Area", "Net Area", "ModelArea" }),
-                    Volume = PropertyHelper.GetQuantityDoubleDeep(item, new[] { "Element", "Quantification" }, new[] { "Volume", "Volume Value", "Gross Volume", "Net Volume", "ModelVolume" }),
-                    Height = PropertyHelper.GetQuantityDoubleDeep(item, new[] { "Element", "Quantification" }, new[] { "Height", "Unconnected Height" }),
-                    Width = PropertyHelper.GetQuantityDoubleDeep(item, new[] { "Element", "Quantification" }, new[] { "Width" }),
-                    Thickness = PropertyHelper.GetQuantityDoubleDeep(item, new[] { "Element", "Quantification" }, new[] { "Thickness" }),
+                    Length = PropertyHelper.GetQuantityDoubleDeep(item, new[] { "Element" }, new[] { "Length", "Length Value", "Height", "Cut Length", "ModelLength" }),
+                    Area = PropertyHelper.GetQuantityDoubleDeep(item, new[] { "Element" }, new[] { "Area", "Area Value", "Gross Area", "Net Area", "ModelArea" }),
+                    Volume = PropertyHelper.GetQuantityDoubleDeep(item, new[] { "Element" }, new[] { "Volume", "Volume Value", "Gross Volume", "Net Volume", "ModelVolume" }),
+                    Height = PropertyHelper.GetQuantityDoubleDeep(item, new[] { "Element" }, new[] { "Height", "Unconnected Height" }),
+                    Width = PropertyHelper.GetQuantityDoubleDeep(item, new[] { "Element" }, new[] { "Width" }),
+                    Thickness = PropertyHelper.GetQuantityDoubleDeep(item, new[] { "Element" }, new[] { "Thickness" }),
                     Count = 1
                 };
 
