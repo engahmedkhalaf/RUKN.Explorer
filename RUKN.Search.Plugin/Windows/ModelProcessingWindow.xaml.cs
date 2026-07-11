@@ -910,7 +910,7 @@ namespace RUKN.Search.Plugin
             var saveFileDialog = new Microsoft.Win32.SaveFileDialog
             {
                 Filter = "Excel Workbook (*.xlsx)|*.xlsx",
-                FileName = "Navisworks_Viewpoints_Takeoff_Report.xlsx"
+                FileName = "Navisworks_Viewpoints_Report.xlsx"
             };
 
             if (saveFileDialog.ShowDialog() == true)
@@ -936,7 +936,11 @@ namespace RUKN.Search.Plugin
                     // Write Title Header Info
                     sheet.Cells[1, 1] = "RUKN EXPLORER - ENHANCED VIEWPOINTS REPORT";
                     sheet.Cells[2, 1] = $"Total Viewpoints: {viewpoints.Count}";
+                    sheet.Cells[2, 3] = "Developer: Ahmed Khalaf";
+                    sheet.Cells[2, 5] = "Publisher: RUKNBIM";
                     sheet.Cells[3, 1] = $"Exported Date: {DateTime.Now:yyyy-MM-dd HH:mm:ss}";
+                    sheet.Cells[3, 3] = "Support: support@ruknbim.com";
+                    sheet.Cells[3, 5] = "Sales: sales@ruknbim.com | www.ruknbim.com";
 
                     // Style Title Block
                     dynamic titleRange = sheet.Range["A1"];
@@ -944,7 +948,7 @@ namespace RUKN.Search.Plugin
                     titleRange.Font.Size = 14;
                     titleRange.Font.Color = 13528603; // Brand Blue (#1B6ECE)
 
-                    dynamic infoRange = sheet.Range["A2", "A3"];
+                    dynamic infoRange = sheet.Range["A2", "G3"];
                     infoRange.Font.Italic = true;
                     infoRange.Font.Size = 10;
 
@@ -1059,7 +1063,12 @@ namespace RUKN.Search.Plugin
             try
             {
                 ClearSectioning();
-                TextBlockStatus.Text = "Reset to Full Mode (Section Cuts Cleared).";
+                var doc = Autodesk.Navisworks.Api.Application.ActiveDocument;
+                if (doc != null)
+                {
+                    doc.Models.ResetAllHidden();
+                }
+                TextBlockStatus.Text = "Reset to Full Mode (Section Cuts & Hidden Models Cleared).";
             }
             catch (Exception ex)
             {
@@ -1181,12 +1190,78 @@ namespace RUKN.Search.Plugin
             }
         }
 
+        private void HideUnselectedModels(string selectedModelName)
+        {
+            var doc = Autodesk.Navisworks.Api.Application.ActiveDocument;
+            if (doc == null) return;
+
+            try
+            {
+                var targetItem = FindModelItem(selectedModelName);
+                if (targetItem == null) return;
+
+                var itemsToShow = new Autodesk.Navisworks.Api.ModelItemCollection();
+                var itemsToHide = new Autodesk.Navisworks.Api.ModelItemCollection();
+
+                // 1. Get the parent structure of the target item
+                // If it is nested under an NWD/NWF container model
+                if (targetItem.Parent != null && targetItem.Parent.Parent == null)
+                {
+                    // Sibling child items under the NWD container
+                    foreach (var sibling in targetItem.Parent.Children)
+                    {
+                        if (sibling == targetItem)
+                        {
+                            itemsToShow.Add(sibling);
+                        }
+                        else
+                        {
+                            itemsToHide.Add(sibling);
+                        }
+                    }
+                }
+                else
+                {
+                    // Normal top-level model roots
+                    foreach (Autodesk.Navisworks.Api.Model model in doc.Models)
+                    {
+                        if (model.RootItem != null)
+                        {
+                            if (model.RootItem == targetItem)
+                            {
+                                itemsToShow.Add(model.RootItem);
+                            }
+                            else
+                            {
+                                itemsToHide.Add(model.RootItem);
+                            }
+                        }
+                    }
+                }
+
+                // Apply hidden/visible states in Navisworks
+                if (itemsToShow.Count > 0)
+                {
+                    doc.Models.SetHidden(itemsToShow, false);
+                }
+                if (itemsToHide.Count > 0)
+                {
+                    doc.Models.SetHidden(itemsToHide, true);
+                }
+            }
+            catch (Exception)
+            {
+                // Silent catch
+            }
+        }
+
         private void ComboModel_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (ComboModel.SelectedItem != null)
             {
                 string selectedModel = ComboModel.SelectedItem.ToString();
                 PopulateLevels(selectedModel);
+                HideUnselectedModels(selectedModel);
             }
         }
     }
