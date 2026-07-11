@@ -14,38 +14,112 @@ namespace RUKN.Search.Plugin.Windows
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            ShowActiveLicense();
+            LoadLicenseStatus();
         }
 
-        private void ShowActiveLicense()
+        private void LoadLicenseStatus()
         {
             try
             {
                 MachineText.Text = System.Environment.MachineName;
 
-                StatusDot.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#22C55E"));
-                StatusText.Text = "Active";
+                string licKey = SettingsConfig.GetValue("LicenseKey");
+                string trialStartStr = SettingsConfig.GetValue("TrialStartDate");
 
-                EmailRow.Visibility = Visibility.Visible;
-                EmailText.Text = "user@ruknbim.com";
+                if (licKey == "RUKN-INSIGHT-PRO-PAID-KEY")
+                {
+                    // Paid Active License
+                    StatusDot.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#22C55E"));
+                    StatusText.Text = "Active";
 
-                DaysRow.Visibility = Visibility.Collapsed;
-                TypeRow.Visibility = Visibility.Visible;
-                TypeText.Text = "Single-User Paid License";
+                    EmailRow.Visibility = Visibility.Visible;
+                    string email = SettingsConfig.GetValue("LicenseEmail");
+                    EmailText.Text = string.IsNullOrEmpty(email) ? "user@ruknbim.com" : email;
 
-                ExpiryRow.Visibility = Visibility.Visible;
-                ExpiryLabel.Text = "Expiry Date";
-                ExpiryText.Text = "Never (Lifetime)";
+                    DaysRow.Visibility = Visibility.Collapsed;
+                    TypeRow.Visibility = Visibility.Visible;
+                    TypeText.Text = "Single-User Paid License";
 
-                KeyRow.Visibility = Visibility.Visible;
-                KeyText.Text = "RUKN-INSIGHT-PRO-PAID-KEY";
+                    ExpiryRow.Visibility = Visibility.Visible;
+                    ExpiryLabel.Text = "Expiry Date";
+                    ExpiryText.Text = "Never (Lifetime)";
 
-                MachineRow.Visibility = Visibility.Visible;
+                    KeyRow.Visibility = Visibility.Visible;
+                    KeyText.Text = "RUKN-INSIGHT-PRO-PAID-KEY";
 
-                ActivationPanel.Visibility = Visibility.Collapsed;
-                ActivePanel.Visibility = Visibility.Visible;
+                    MachineRow.Visibility = Visibility.Visible;
+
+                    ActivationPanel.Visibility = Visibility.Collapsed;
+                    ActivePanel.Visibility = Visibility.Visible;
+                }
+                else if (!string.IsNullOrEmpty(trialStartStr) && DateTime.TryParse(trialStartStr, out DateTime trialStart))
+                {
+                    DateTime trialExpiry = trialStart.AddDays(14);
+                    int daysLeft = (trialExpiry.Date - DateTime.Now.Date).Days;
+
+                    if (daysLeft >= 0)
+                    {
+                        // Active Trial License
+                        StatusDot.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#22C55E"));
+                        StatusText.Text = "Active (Trial)";
+
+                        EmailRow.Visibility = Visibility.Visible;
+                        string email = SettingsConfig.GetValue("LicenseEmail");
+                        EmailText.Text = string.IsNullOrEmpty(email) ? "trial@ruknbim.com" : email;
+
+                        DaysRow.Visibility = Visibility.Visible;
+                        DaysText.Text = $"{daysLeft} days remaining";
+
+                        TypeRow.Visibility = Visibility.Visible;
+                        TypeText.Text = "14-Day Free Trial";
+
+                        ExpiryRow.Visibility = Visibility.Visible;
+                        ExpiryLabel.Text = "Trial Expiry";
+                        ExpiryText.Text = trialExpiry.ToString("yyyy-MM-dd");
+
+                        KeyRow.Visibility = Visibility.Collapsed;
+                        MachineRow.Visibility = Visibility.Visible;
+
+                        ActivationPanel.Visibility = Visibility.Visible; // Let them activate key if they want
+                        SignOutPanel.Visibility = Visibility.Visible;
+                        ActivePanel.Visibility = Visibility.Collapsed;
+                    }
+                    else
+                    {
+                        // Expired Trial
+                        StatusDot.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#EF4444"));
+                        StatusText.Text = "Trial Expired";
+
+                        EmailRow.Visibility = Visibility.Visible;
+                        string email = SettingsConfig.GetValue("LicenseEmail");
+                        EmailText.Text = string.IsNullOrEmpty(email) ? "trial@ruknbim.com" : email;
+
+                        DaysRow.Visibility = Visibility.Collapsed;
+                        TypeRow.Visibility = Visibility.Visible;
+                        TypeText.Text = "14-Day Free Trial (Expired)";
+
+                        ExpiryRow.Visibility = Visibility.Visible;
+                        ExpiryLabel.Text = "Expired On";
+                        ExpiryText.Text = trialExpiry.ToString("yyyy-MM-dd");
+
+                        KeyRow.Visibility = Visibility.Collapsed;
+                        MachineRow.Visibility = Visibility.Visible;
+
+                        ActivationPanel.Visibility = Visibility.Visible;
+                        SignOutPanel.Visibility = Visibility.Visible;
+                        ActivePanel.Visibility = Visibility.Collapsed;
+                    }
+                }
+                else
+                {
+                    // No license / Unlicensed
+                    ShowInactiveLicense();
+                }
             }
-            catch { }
+            catch 
+            {
+                ShowInactiveLicense();
+            }
         }
 
         private void ShowInactiveLicense()
@@ -65,22 +139,27 @@ namespace RUKN.Search.Plugin.Windows
                 MachineRow.Visibility = Visibility.Collapsed;
 
                 ActivationPanel.Visibility = Visibility.Visible;
-                ActivePanel.Visibility = Visibility.Collapsed;
                 SignOutPanel.Visibility = Visibility.Collapsed;
+                ActivePanel.Visibility = Visibility.Collapsed;
             }
             catch { }
         }
 
         private void BtnActivate_Click(object sender, RoutedEventArgs e)
         {
-            if (string.IsNullOrWhiteSpace(KeyInput.Text))
+            string enteredKey = KeyInput.Text.Trim();
+            if (enteredKey == "RUKN-INSIGHT-PRO-PAID-KEY")
             {
-                MessageBox.Show("Please enter a valid license key.", "Validation Error", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
+                SettingsConfig.SetValue("LicenseKey", "RUKN-INSIGHT-PRO-PAID-KEY");
+                SettingsConfig.SetValue("LicenseEmail", "user@ruknbim.com");
 
-            MessageBox.Show("License successfully activated on this machine!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
-            ShowActiveLicense();
+                MessageBox.Show("License successfully activated on this machine!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                LoadLicenseStatus();
+            }
+            else
+            {
+                MessageBox.Show("Invalid license key. Please check your key or contact support.", "Validation Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
         }
 
         private void BtnDeactivate_Click(object sender, RoutedEventArgs e)
@@ -88,13 +167,17 @@ namespace RUKN.Search.Plugin.Windows
             var result = MessageBox.Show("Are you sure you want to deactivate the license on this machine?", "Deactivate License", MessageBoxButton.YesNo, MessageBoxImage.Question);
             if (result == MessageBoxResult.Yes)
             {
-                ShowInactiveLicense();
+                SettingsConfig.SetValue("LicenseKey", "");
+                SettingsConfig.SetValue("LicenseEmail", "");
+                LoadLicenseStatus();
             }
         }
 
         private void BtnSignOut_Click(object sender, RoutedEventArgs e)
         {
-            ShowInactiveLicense();
+            SettingsConfig.SetValue("TrialStartDate", "");
+            SettingsConfig.SetValue("LicenseEmail", "");
+            LoadLicenseStatus();
         }
 
         private void Website_Click(object sender, MouseButtonEventArgs e)

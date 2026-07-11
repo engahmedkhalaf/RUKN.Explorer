@@ -22,6 +22,9 @@
     <Compile Include="$(MSBuildThisFileDirectory)Windows\LicenseWindow.xaml.cs">
       <DependentUpon>LicenseWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="$(MSBuildThisFileDirectory)Windows\TrialWindow.xaml.cs">
+      <DependentUpon>TrialWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="$(MSBuildThisFileDirectory)Windows\ModelProcessingWindow.xaml.cs">
       <DependentUpon>ModelProcessingWindow.xaml</DependentUpon>
     </Compile>
@@ -37,6 +40,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="$(MSBuildThisFileDirectory)Windows\LicenseWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="$(MSBuildThisFileDirectory)Windows\TrialWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
