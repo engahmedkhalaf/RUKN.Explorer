@@ -1418,7 +1418,7 @@
                       Canvas.Top="54"/>
 
                     <TextBlock x:Name="RUKNBIMText"
-                               Text="RUKN Explorer"
+                               Text="RUKN Insight Pro"
                                FontSize="120"
                                FontWeight="Bold"
                                FontFamily="{StaticResource FormFamily}"

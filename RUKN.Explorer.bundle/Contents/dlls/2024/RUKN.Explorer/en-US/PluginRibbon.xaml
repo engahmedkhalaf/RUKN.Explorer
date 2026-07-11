@@ -13,7 +13,7 @@
 
     <RibbonTab Id="RUKNBIM" KeyTip="T1">
         <RibbonPanel x:Uid="RibbonPane1_1">
-            <RibbonPanelSource x:Uid="RibbonPanelSource_RibbonPanel_1" KeyTip="C1" Title="RUKN Explorer">
+            <RibbonPanelSource x:Uid="RibbonPanelSource_RibbonPanel_1" KeyTip="C1" Title="RUKN Insight Pro">
                 <local:NWRibbonButton x:Uid="ModelProcessing" Id="ModelProcessing"
                             Size="Large"
                             KeyTip="B3"

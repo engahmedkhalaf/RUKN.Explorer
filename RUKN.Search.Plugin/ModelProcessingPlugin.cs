@@ -4,7 +4,7 @@ using System.Windows.Interop;
 
 namespace RUKN.Search.Plugin
 {
-    [Plugin("ModelProcessing", IdentityInformation.DeveloperID, ToolTip = "Model Processing & Viewpoints Generator", DisplayName = "RUKN Explorer")]
+    [Plugin("ModelProcessing", IdentityInformation.DeveloperID, ToolTip = "Model Processing & Viewpoints Generator", DisplayName = "RUKN Insight Pro")]
     public class ModelProcessingPlugin : CustomPlugin
     {
         private static ModelProcessingWindow _activeWindow;

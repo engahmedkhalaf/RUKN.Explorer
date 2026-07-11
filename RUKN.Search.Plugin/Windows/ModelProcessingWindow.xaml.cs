@@ -934,7 +934,7 @@ namespace RUKN.Search.Plugin
                     sheet.Name = "Viewpoints Report";
 
                     // Write Title Header Info
-                    sheet.Cells[1, 1] = "RUKN EXPLORER - ENHANCED VIEWPOINTS REPORT";
+                    sheet.Cells[1, 1] = "RUKN INSIGHT PRO - ENHANCED VIEWPOINTS REPORT";
                     sheet.Cells[2, 1] = $"Total Viewpoints: {viewpoints.Count}";
                     sheet.Cells[2, 3] = "Developer: Ahmed Khalaf";
                     sheet.Cells[2, 5] = "Publisher: RUKNBIM";

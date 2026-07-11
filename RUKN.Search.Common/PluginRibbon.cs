@@ -9,9 +9,9 @@ using System.Windows;
 
 namespace Rukn.Navisworks.Plugin.Common
 {
-    [Plugin("SelectByRevitIdRibbon", IdentityInformation.DeveloperID, DisplayName = "RUKN Explorer")]
+    [Plugin("SelectByRevitIdRibbon", IdentityInformation.DeveloperID, DisplayName = "RUKN Insight Pro")]
     [RibbonLayout("PluginRibbon.xaml")]
-    [RibbonTab("RUKNBIM", DisplayName = "RUKN Explorer")]
+    [RibbonTab("RUKNBIM", DisplayName = "RUKN Insight Pro")]
     [Command("ModelProcessing", Icon = "ElementID_16.ico", LargeIcon = "ElementID_32.png", ToolTip = "Model processing and viewpoint generation settings", DisplayName = "Model Processing")]
     public class PluginRibbon : CommonCommandHandlerPlugin
     {
