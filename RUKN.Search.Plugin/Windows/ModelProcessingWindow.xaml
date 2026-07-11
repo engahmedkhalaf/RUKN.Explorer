@@ -98,16 +98,7 @@
                     <TextBlock Text="Model Source" FontWeight="Bold" Foreground="#18263c" FontSize="13" Margin="0,0,0,5"/>
                     <Border BorderBrush="{DynamicResource SecondaryGray}" BorderThickness="0,0,0,1" Opacity="0.3" Margin="0,0,0,10"/>
                     <StackPanel Margin="10,0,0,15">
-                        <!-- Model Dropdown -->
-                        <Grid Margin="0,0,0,0">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Text="Model:" VerticalAlignment="Center" Margin="0,0,10,0" Width="80" Grid.Column="0"/>
-                            <ComboBox Name="ComboModel" SelectionChanged="ComboModel_SelectionChanged" Height="28" HorizontalAlignment="Stretch" Grid.Column="1">
-                            </ComboBox>
-                        </Grid>
+                        <ComboBox Name="ComboModel" SelectionChanged="ComboModel_SelectionChanged" Height="28" HorizontalAlignment="Stretch"/>
                     </StackPanel>
 
                     <!-- Reference Settings Group -->
