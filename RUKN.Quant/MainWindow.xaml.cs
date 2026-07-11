@@ -209,8 +209,8 @@ namespace RUKN.Quant
 
             var saveFileDialog = new Microsoft.Win32.SaveFileDialog
             {
-                Filter = "Excel CSV File (*.csv)|*.csv",
-                FileName = "RUKN_Quantities_BOQ.csv"
+                Filter = "Excel Workbook (*.xlsx)|*.xlsx",
+                FileName = "RUKN_Quantities_BOQ.xlsx"
             };
 
             if (saveFileDialog.ShowDialog() == true)
