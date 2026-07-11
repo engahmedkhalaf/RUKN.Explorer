@@ -1027,13 +1027,34 @@ namespace RUKN.Search.Plugin
             {
                 if (Autodesk.Navisworks.Api.Application.ActiveDocument != null)
                 {
+                    var nwcModels = new System.Collections.Generic.List<string>();
+                    var allModels = new System.Collections.Generic.List<string>();
+
                     foreach (Autodesk.Navisworks.Api.Model model in Autodesk.Navisworks.Api.Application.ActiveDocument.Models)
                     {
-                        string name = model.RootItem != null ? model.RootItem.DisplayName : System.IO.Path.GetFileNameWithoutExtension(model.SourceFileName);
+                        string dispName = model.RootItem != null ? model.RootItem.DisplayName : "";
+                        string srcName = model.SourceFileName ?? "";
+                        string name = !string.IsNullOrEmpty(dispName) ? dispName : System.IO.Path.GetFileNameWithoutExtension(srcName);
+
                         if (!string.IsNullOrEmpty(name))
                         {
-                            ComboModel.Items.Add(name);
+                            allModels.Add(name);
+
+                            // Check if it is an NWC model
+                            if (srcName.EndsWith(".nwc", StringComparison.OrdinalIgnoreCase) || 
+                                dispName.EndsWith(".nwc", StringComparison.OrdinalIgnoreCase) ||
+                                srcName.IndexOf(".nwc", StringComparison.OrdinalIgnoreCase) >= 0 || 
+                                dispName.IndexOf(".nwc", StringComparison.OrdinalIgnoreCase) >= 0)
+                            {
+                                nwcModels.Add(name);
+                            }
                         }
+                    }
+
+                    var modelsToLoad = nwcModels.Count > 0 ? nwcModels : allModels;
+                    foreach (var m in modelsToLoad)
+                    {
+                        ComboModel.Items.Add(m);
                     }
                 }
             }
