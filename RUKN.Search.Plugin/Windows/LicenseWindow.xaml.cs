@@ -145,13 +145,34 @@ namespace RUKN.Search.Plugin.Windows
             catch { }
         }
 
-        private void BtnActivate_Click(object sender, RoutedEventArgs e)
+        private async void BtnActivate_Click(object sender, RoutedEventArgs e)
         {
             string enteredKey = KeyInput.Text.Trim();
-            if (enteredKey == "RUKN-INSIGHT-PRO-PAID-KEY")
+            if (string.IsNullOrEmpty(enteredKey))
+            {
+                MessageBox.Show("Please enter a valid license key.", "Validation Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            string email = SettingsConfig.GetValue("LicenseEmail");
+            if (string.IsNullOrEmpty(email))
+            {
+                email = "user@ruknbim.com";
+            }
+
+            string machineName = System.Environment.MachineName;
+
+            StatusText.Text = "Activating Online...";
+            BtnActivate.IsEnabled = false;
+
+            bool isActivated = await RUKN.Search.Plugin.Utils.SupabaseLicensing.ActivateLicenseAsync(enteredKey, email, machineName);
+
+            BtnActivate.IsEnabled = true;
+
+            if (isActivated)
             {
                 SettingsConfig.SetValue("LicenseKey", "RUKN-INSIGHT-PRO-PAID-KEY");
-                SettingsConfig.SetValue("LicenseEmail", "user@ruknbim.com");
+                SettingsConfig.SetValue("LicenseEmail", email);
 
                 MessageBox.Show("License successfully activated on this machine!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
                 LoadLicenseStatus();
@@ -159,6 +180,7 @@ namespace RUKN.Search.Plugin.Windows
             else
             {
                 MessageBox.Show("Invalid license key. Please check your key or contact support.", "Validation Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                LoadLicenseStatus();
             }
         }
 

@@ -99,7 +99,9 @@ namespace RUKN.Search.Plugin
                 { "version",   currentVersion  },
                 { "user",   "user01"  },
                 { "release",   "0"  },
-                { "apikey",   "0"  }
+                { "apikey",   "0"  },
+                { "SupabaseUrl", "https://auvtapbsdewwmzejchgq.supabase.co" },
+                { "SupabaseAnonKey", "YOUR_SUPABASE_ANON_KEY" }
             };
 
 

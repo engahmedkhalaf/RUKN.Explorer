@@ -12,6 +12,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)ModelProcessingPlugin.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utils\Analytics.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utils\SettingsConfig.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utils\SupabaseLicensing.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Windows\Tools.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Windows\LabelVersion.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Windows\MainWindowViewModel.cs" />
