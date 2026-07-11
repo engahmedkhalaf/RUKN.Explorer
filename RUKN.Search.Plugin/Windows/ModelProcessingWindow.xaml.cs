@@ -988,6 +988,15 @@ namespace RUKN.Search.Plugin
                             doc.SavedViewpoints.CurrentSavedViewpoint = vp.SavedVp;
                         }
 
+                        // Force viewport redraw and process message queue to let the view update synchronously
+                        if (doc.ActiveView != null)
+                        {
+                            doc.ActiveView.RequestDelayedRedraw(Autodesk.Navisworks.Api.ViewRedrawRequests.All);
+                            System.Windows.Forms.Application.DoEvents();
+                            System.Threading.Thread.Sleep(150); // Allow DirectX engine to update viewpoint frame buffer
+                            System.Windows.Forms.Application.DoEvents();
+                        }
+
                         // Generate viewpoint thumbnail screenshot image
                         string tempImgPath = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"vp_thumb_{Guid.NewGuid():N}.png");
                         bool hasImage = false;
