@@ -893,21 +893,36 @@ namespace RUKN.Search.Plugin
                     dynamic sheet = workbook.ActiveSheet;
                     sheet.Name = "Viewpoints Report";
 
-                    // Write Headers
-                    sheet.Cells[1, 1] = "Folder Path";
-                    sheet.Cells[1, 2] = "Viewpoint Display Name";
-                    sheet.Cells[1, 3] = "Model/Source File";
-                    sheet.Cells[1, 4] = "BIM Level";
-                    sheet.Cells[1, 5] = "Top Offset";
-                    sheet.Cells[1, 6] = "Bottom Offset";
+                    // Write Title Header Info
+                    sheet.Cells[1, 1] = "RUKN EXPLORER - ENHANCED VIEWPOINTS REPORT";
+                    sheet.Cells[2, 1] = $"Total Viewpoints: {viewpoints.Count}";
+                    sheet.Cells[3, 1] = $"Exported Date: {DateTime.Now:yyyy-MM-dd HH:mm:ss}";
 
-                    // Style Headers (First Row: A1 to F1)
-                    dynamic headerRange = sheet.Range["A1", "F1"];
+                    // Style Title Block
+                    dynamic titleRange = sheet.Range["A1"];
+                    titleRange.Font.Bold = true;
+                    titleRange.Font.Size = 14;
+                    titleRange.Font.Color = 13528603; // Brand Blue (#1B6ECE)
+
+                    dynamic infoRange = sheet.Range["A2", "A3"];
+                    infoRange.Font.Italic = true;
+                    infoRange.Font.Size = 10;
+
+                    // Write Column Headers on Row 5
+                    sheet.Cells[5, 1] = "Folder Path";
+                    sheet.Cells[5, 2] = "Viewpoint Display Name";
+                    sheet.Cells[5, 3] = "Model/Source File";
+                    sheet.Cells[5, 4] = "BIM Level";
+                    sheet.Cells[5, 5] = "Top Offset";
+                    sheet.Cells[5, 6] = "Bottom Offset";
+
+                    // Style Column Headers (Row 5: A5 to F5)
+                    dynamic headerRange = sheet.Range["A5", "F5"];
                     headerRange.Font.Bold = true;
                     headerRange.Font.Color = 16777215; // White text (#FFFFFF)
                     headerRange.Interior.Color = 13528603; // Brand Blue (#1B6ECE)
 
-                    int row = 2;
+                    int row = 6;
                     foreach (var vp in viewpoints)
                     {
                         var parsed = ParseViewpointName(vp.Name, vp.Path);
