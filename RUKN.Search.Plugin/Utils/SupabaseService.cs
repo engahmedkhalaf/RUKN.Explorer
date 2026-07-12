@@ -38,7 +38,7 @@ namespace RUKN.Search.Plugin.Utils
                     client.DefaultRequestHeaders.Add("Authorization", $"Bearer {anonKey}");
 
                     // 1. Query table 'licenses' to see if key exists, is valid, and matches this product
-                    string queryUrl = $"{supabaseUrl}/rest/v1/licenses?key=eq.{key}&product=eq.{Product}&select=*";
+                    string queryUrl = $"{supabaseUrl}/rest/v1/licenses?license_key=eq.{key}&product=eq.{Product}&select=*";
                     
                     HttpResponseMessage response;
                     try
@@ -63,8 +63,8 @@ namespace RUKN.Search.Plugin.Utils
                     }
 
                     // 2. Register/activate the key on this machine
-                    string patchUrl = $"{supabaseUrl}/rest/v1/licenses?key=eq.{key}&product=eq.{Product}";
-                    string payload = $"{{\"machine_name\": \"{machineName}\", \"email\": \"{email}\", \"is_active\": true}}";
+                    string patchUrl = $"{supabaseUrl}/rest/v1/licenses?license_key=eq.{key}&product=eq.{Product}";
+                    string payload = $"{{\"machine_id\": \"{machineName}\", \"email\": \"{email}\", \"status\": \"Active\"}}";
                     
                     var request = new HttpRequestMessage(new HttpMethod("PATCH"), patchUrl)
                     {
