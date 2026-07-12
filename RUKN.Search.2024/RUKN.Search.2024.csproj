@@ -79,7 +79,7 @@ copy "$(SolutionDir)RUKN.Search.Common\PackageContents.xml" "$(SolutionDir)RUKN.
 
 if EXIST "%25APPDATA%25\Autodesk\ApplicationPlugins\RUKN.Explorer.bundle" rmdir /s /q "%25AppData%25\Autodesk\ApplicationPlugins\RUKN.Explorer.bundle"
 mkdir "%25APPDATA%25\Autodesk\ApplicationPlugins\RUKN.Explorer.bundle"
-xcopy /e /s /h /y "$(SolutionDir)RUKN.Explorer.bundle\*" "%25APPDATA%25\Autodesk\ApplicationPlugins\RUKN.Explorer.bundle\"</PostBuildEvent>
+xcopy /e /s /h /y "$(SolutionDir)RUKN.Explorer.bundle\*" "%25APPDATA%25\Autodesk\ApplicationPlugins\RUKN.Explorer.bundle"</PostBuildEvent>
   </PropertyGroup>
 </Project>
 
