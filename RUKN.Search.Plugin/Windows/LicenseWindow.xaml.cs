@@ -21,35 +21,40 @@ namespace RUKN.Search.Plugin.Windows
         {
             try
             {
-                MachineText.Text = System.Environment.MachineName;
+                string savedMachine = SettingsConfig.GetValue("LicenseMachine");
+                MachineText.Text = string.IsNullOrEmpty(savedMachine) ? System.Environment.MachineName : savedMachine;
 
                 string licKey = SettingsConfig.GetValue("LicenseKey");
                 string trialStartStr = SettingsConfig.GetValue("TrialStartDate");
 
-                if (licKey == "RUKN-INSIGHT-PRO-PAID-KEY")
+                if (!string.IsNullOrEmpty(licKey))
                 {
                     // Paid Active License
                     StatusDot.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#22C55E"));
-                    StatusText.Text = "Active";
+                    StatusText.Text = "Activated";
 
                     EmailRow.Visibility = Visibility.Visible;
                     string email = SettingsConfig.GetValue("LicenseEmail");
                     EmailText.Text = string.IsNullOrEmpty(email) ? "user@ruknbim.com" : email;
 
                     DaysRow.Visibility = Visibility.Collapsed;
+                    
                     TypeRow.Visibility = Visibility.Visible;
-                    TypeText.Text = "Single-User Paid License";
+                    string type = SettingsConfig.GetValue("LicenseType");
+                    TypeText.Text = string.IsNullOrEmpty(type) ? "Professional" : type;
 
                     ExpiryRow.Visibility = Visibility.Visible;
                     ExpiryLabel.Text = "Expiry Date";
-                    ExpiryText.Text = "Never (Lifetime)";
+                    string expiry = SettingsConfig.GetValue("LicenseExpiry");
+                    ExpiryText.Text = string.IsNullOrEmpty(expiry) ? "Never (Lifetime)" : expiry;
 
                     KeyRow.Visibility = Visibility.Visible;
-                    KeyText.Text = "RUKN-INSIGHT-PRO-PAID-KEY";
+                    KeyText.Text = licKey;
 
                     MachineRow.Visibility = Visibility.Visible;
 
                     ActivationPanel.Visibility = Visibility.Collapsed;
+                    SignOutPanel.Visibility = Visibility.Collapsed;
                     ActivePanel.Visibility = Visibility.Visible;
                 }
                 else if (!string.IsNullOrEmpty(trialStartStr) && DateTime.TryParse(trialStartStr, out DateTime trialStart))
@@ -172,7 +177,10 @@ namespace RUKN.Search.Plugin.Windows
             if (result.Success)
             {
                 SettingsConfig.SetValue("LicenseKey", enteredKey);
-                SettingsConfig.SetValue("LicenseEmail", email);
+                SettingsConfig.SetValue("LicenseEmail", result.Email);
+                SettingsConfig.SetValue("LicenseType", result.LicenseType);
+                SettingsConfig.SetValue("LicenseExpiry", result.ExpiryDate);
+                SettingsConfig.SetValue("LicenseMachine", result.MachineId);
 
                 MessageBox.Show("License successfully activated on this machine!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
                 LoadLicenseStatus();
@@ -191,6 +199,9 @@ namespace RUKN.Search.Plugin.Windows
             {
                 SettingsConfig.SetValue("LicenseKey", "");
                 SettingsConfig.SetValue("LicenseEmail", "");
+                SettingsConfig.SetValue("LicenseType", "");
+                SettingsConfig.SetValue("LicenseExpiry", "");
+                SettingsConfig.SetValue("LicenseMachine", "");
                 LoadLicenseStatus();
             }
         }
@@ -199,6 +210,10 @@ namespace RUKN.Search.Plugin.Windows
         {
             SettingsConfig.SetValue("TrialStartDate", "");
             SettingsConfig.SetValue("LicenseEmail", "");
+            SettingsConfig.SetValue("LicenseKey", "");
+            SettingsConfig.SetValue("LicenseType", "");
+            SettingsConfig.SetValue("LicenseExpiry", "");
+            SettingsConfig.SetValue("LicenseMachine", "");
             LoadLicenseStatus();
         }
 

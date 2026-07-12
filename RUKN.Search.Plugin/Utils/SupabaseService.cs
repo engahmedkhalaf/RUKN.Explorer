@@ -2,20 +2,39 @@ using System;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
+using System.Text.RegularExpressions;
 
 namespace RUKN.Search.Plugin.Utils
 {
+    public class LicenseActivationResult
+    {
+        public bool Success { get; set; }
+        public string Message { get; set; }
+        public string Email { get; set; }
+        public string LicenseType { get; set; }
+        public string ExpiryDate { get; set; }
+        public string MachineId { get; set; }
+    }
+
     public static class SupabaseService
     {
         private const string Product = "insight_pro";
 
-        public static async Task<(bool Success, string Message)> ActivateLicenseAsync(string key, string email, string machineName)
+        public static async Task<LicenseActivationResult> ActivateLicenseAsync(string key, string email, string machineName)
         {
             try
             {
                 if (key == "RUKN-INSIGHT-PRO-PAID-KEY")
                 {
-                    return (true, "Bypass Key Approved");
+                    return new LicenseActivationResult
+                    {
+                        Success = true,
+                        Message = "Bypass Key Approved",
+                        Email = "developer@ruknbim.com",
+                        LicenseType = "Professional",
+                        ExpiryDate = "Never (Lifetime)",
+                        MachineId = machineName
+                    };
                 }
 
                 string supabaseUrl = SettingsConfig.GetValue("SupabaseUrl");
@@ -25,9 +44,21 @@ namespace RUKN.Search.Plugin.Utils
                 {
                     if (key == "RUKN-INSIGHT-PRO-PAID-KEY")
                     {
-                        return (true, "Bypass Key Approved");
+                        return new LicenseActivationResult
+                        {
+                            Success = true,
+                            Message = "Bypass Key Approved",
+                            Email = "developer@ruknbim.com",
+                            LicenseType = "Professional",
+                            ExpiryDate = "Never (Lifetime)",
+                            MachineId = machineName
+                        };
                     }
-                    return (false, "Supabase credentials are not configured in your 'ruknbim.config' file yet.");
+                    return new LicenseActivationResult
+                    {
+                        Success = false,
+                        Message = "Supabase credentials are not configured in your 'ruknbim.config' file yet."
+                    };
                 }
 
                 using (var client = new HttpClient())
@@ -47,24 +78,36 @@ namespace RUKN.Search.Plugin.Utils
                     }
                     catch (Exception ex)
                     {
-                        return (false, $"Network connection failed: {ex.Message}");
+                        return new LicenseActivationResult { Success = false, Message = $"Network connection failed: {ex.Message}" };
                     }
 
                     if (!response.IsSuccessStatusCode)
                     {
                         string errContent = await response.Content.ReadAsStringAsync();
-                        return (false, $"Database query returned error ({response.StatusCode}): {errContent}");
+                        return new LicenseActivationResult { Success = false, Message = $"Database query returned error ({response.StatusCode}): {errContent}" };
                     }
 
                     string json = await response.Content.ReadAsStringAsync();
                     if (string.IsNullOrEmpty(json) || json == "[]")
                     {
-                        return (false, $"License key was not found in database for product '{Product}'.");
+                        return new LicenseActivationResult { Success = false, Message = $"License key was not found in database for product '{Product}'." };
+                    }
+
+                    // Extract values from JSON response using Regex
+                    string emailVal = GetJsonValue(json, "email");
+                    string typeVal = GetJsonValue(json, "license_type");
+                    string expiryVal = GetJsonValue(json, "expiry_date");
+
+                    // Format expiry date string (e.g. from 2027-07-12 to 12 Jul 2027)
+                    string formattedExpiry = expiryVal;
+                    if (DateTime.TryParse(expiryVal, out DateTime parsedDate))
+                    {
+                        formattedExpiry = parsedDate.ToString("dd MMM yyyy");
                     }
 
                     // 2. Register/activate the key on this machine
                     string patchUrl = $"{supabaseUrl}/rest/v1/licenses?license_key=eq.{key}&product=eq.{Product}";
-                    string payload = $"{{\"machine_id\": \"{machineName}\", \"email\": \"{email}\", \"status\": \"Active\"}}";
+                    string payload = $"{{\"machine_id\": \"{machineName}\", \"email\": \"{(string.IsNullOrEmpty(emailVal) ? email : emailVal)}\", \"status\": \"Active\"}}";
                     
                     var request = new HttpRequestMessage(new HttpMethod("PATCH"), patchUrl)
                     {
@@ -78,22 +121,45 @@ namespace RUKN.Search.Plugin.Utils
                     }
                     catch (Exception ex)
                     {
-                        return (false, $"Network error updating registry: {ex.Message}");
+                        return new LicenseActivationResult { Success = false, Message = $"Network error updating registry: {ex.Message}" };
                     }
 
                     if (!patchResponse.IsSuccessStatusCode)
                     {
                         string errContent = await patchResponse.Content.ReadAsStringAsync();
-                        return (false, $"Database patch returned error ({patchResponse.StatusCode}): {errContent}");
+                        return new LicenseActivationResult { Success = false, Message = $"Database patch returned error ({patchResponse.StatusCode}): {errContent}" };
                     }
 
-                    return (true, "Successfully activated!");
+                    return new LicenseActivationResult
+                    {
+                        Success = true,
+                        Message = "Successfully activated!",
+                        Email = string.IsNullOrEmpty(emailVal) ? email : emailVal,
+                        LicenseType = string.IsNullOrEmpty(typeVal) ? "Professional" : typeVal,
+                        ExpiryDate = string.IsNullOrEmpty(formattedExpiry) ? "Never (Lifetime)" : formattedExpiry,
+                        MachineId = machineName
+                    };
                 }
             }
             catch (Exception ex)
             {
-                return (false, $"Unexpected system error: {ex.Message}");
+                return new LicenseActivationResult { Success = false, Message = $"Unexpected system error: {ex.Message}" };
             }
+        }
+
+        private static string GetJsonValue(string json, string fieldName)
+        {
+            try
+            {
+                string pattern = $"\"{fieldName}\"\\s*:\\s*\"([^\"]*)\"";
+                var match = Regex.Match(json, pattern, RegexOptions.IgnoreCase);
+                if (match.Success)
+                {
+                    return match.Groups[1].Value;
+                }
+            }
+            catch { }
+            return string.Empty;
         }
     }
 }

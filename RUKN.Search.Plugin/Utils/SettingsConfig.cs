@@ -101,7 +101,10 @@ namespace RUKN.Search.Plugin
                 { "release",   "0"  },
                 { "apikey",   "0"  },
                 { "SupabaseUrl", "https://auvtapbsdewwmzejchgq.supabase.co" },
-                { "SupabaseAnonKey", "YOUR_SUPABASE_ANON_KEY" }
+                { "SupabaseAnonKey", "YOUR_SUPABASE_ANON_KEY" },
+                { "LicenseType", "" },
+                { "LicenseExpiry", "" },
+                { "LicenseMachine", "" }
             };
 
 
