@@ -165,7 +165,7 @@ namespace RUKN.Search.Plugin.Windows
             StatusText.Text = "Activating Online...";
             BtnActivate.IsEnabled = false;
 
-            bool isActivated = await RUKN.Search.Plugin.Utils.SupabaseLicensing.ActivateLicenseAsync(enteredKey, email, machineName);
+            bool isActivated = await RUKN.Search.Plugin.Utils.SupabaseService.ActivateLicenseAsync(enteredKey, email, machineName);
 
             BtnActivate.IsEnabled = true;
 

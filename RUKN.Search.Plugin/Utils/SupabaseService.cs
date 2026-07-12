@@ -5,8 +5,10 @@ using System.Threading.Tasks;
 
 namespace RUKN.Search.Plugin.Utils
 {
-    public static class SupabaseLicensing
+    public static class SupabaseService
     {
+        private const string Product = "insight_pro";
+
         public static async Task<bool> ActivateLicenseAsync(string key, string email, string machineName)
         {
             try
@@ -32,8 +34,8 @@ namespace RUKN.Search.Plugin.Utils
                     client.DefaultRequestHeaders.Add("apikey", anonKey);
                     client.DefaultRequestHeaders.Add("Authorization", $"Bearer {anonKey}");
 
-                    // 1. Query table 'licenses' to see if key exists and is valid
-                    string queryUrl = $"{supabaseUrl}/rest/v1/licenses?key=eq.{key}&select=*";
+                    // 1. Query table 'licenses' to see if key exists, is valid, and matches this product
+                    string queryUrl = $"{supabaseUrl}/rest/v1/licenses?key=eq.{key}&product=eq.{Product}&select=*";
                     var response = await client.GetAsync(queryUrl);
                     if (!response.IsSuccessStatusCode)
                     {
@@ -43,11 +45,11 @@ namespace RUKN.Search.Plugin.Utils
                     string json = await response.Content.ReadAsStringAsync();
                     if (string.IsNullOrEmpty(json) || json == "[]")
                     {
-                        return false; // Key not found in DB
+                        return false; // Key not found or doesn't match product in DB
                     }
 
                     // 2. Register/activate the key on this machine
-                    string patchUrl = $"{supabaseUrl}/rest/v1/licenses?key=eq.{key}";
+                    string patchUrl = $"{supabaseUrl}/rest/v1/licenses?key=eq.{key}&product=eq.{Product}";
                     string payload = $"{{\"machine_name\": \"{machineName}\", \"email\": \"{email}\", \"is_active\": true}}";
                     
                     var request = new HttpRequestMessage(new HttpMethod("PATCH"), patchUrl)
