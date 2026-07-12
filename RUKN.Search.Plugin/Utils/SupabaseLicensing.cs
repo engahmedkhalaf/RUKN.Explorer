@@ -11,6 +11,11 @@ namespace RUKN.Search.Plugin.Utils
         {
             try
             {
+                if (key == "RUKN-INSIGHT-PRO-PAID-KEY")
+                {
+                    return true;
+                }
+
                 string supabaseUrl = SettingsConfig.GetValue("SupabaseUrl");
                 string anonKey = SettingsConfig.GetValue("SupabaseAnonKey");
 

@@ -42,7 +42,7 @@ namespace RUKN.Search.Plugin.Windows
             licenseWindow.ShowDialog();
 
             // Check if they successfully activated a paid key inside LicenseWindow
-            if (SettingsConfig.GetValue("LicenseKey") == "RUKN-INSIGHT-PRO-PAID-KEY")
+            if (!string.IsNullOrEmpty(SettingsConfig.GetValue("LicenseKey")))
             {
                 IsTrialStarted = true; // Act as authorized to bypass welcome
                 this.DialogResult = true;

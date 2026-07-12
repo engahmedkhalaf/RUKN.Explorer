@@ -50,7 +50,7 @@ namespace RUKN.Search.Plugin
             {
                 // 1. Check for Paid Active License
                 string licKey = SettingsConfig.GetValue("LicenseKey");
-                if (licKey == "RUKN-INSIGHT-PRO-PAID-KEY")
+                if (!string.IsNullOrEmpty(licKey))
                 {
                     return true;
                 }

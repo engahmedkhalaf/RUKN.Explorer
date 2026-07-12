@@ -171,7 +171,7 @@ namespace RUKN.Search.Plugin.Windows
 
             if (isActivated)
             {
-                SettingsConfig.SetValue("LicenseKey", "RUKN-INSIGHT-PRO-PAID-KEY");
+                SettingsConfig.SetValue("LicenseKey", enteredKey);
                 SettingsConfig.SetValue("LicenseEmail", email);
 
                 MessageBox.Show("License successfully activated on this machine!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
