@@ -18,6 +18,5 @@
 	<Components Description="2024">
 		<RuntimeRequirements OS="Win64" Platform="NAVMAN|NAVSIM" SeriesMin="Nw21" SeriesMax="Nw21" />
 		<ComponentEntry AppName="Select by Revit ID for Autodesk® Navisworks®" AppType="ManagedPlugin" Version="1.0.0.0" ModuleName="./Contents/dlls/2024/RUKN.Explorer/RUKN.Explorer.dll" AppDescription="Select by Revit ID." />
-		<ComponentEntry AppName="RUKN Quant for Autodesk® Navisworks®" AppType="ManagedPlugin" Version="1.0.0.0" ModuleName="./Contents/dlls/2024/RUKN.Quant/RUKN.Quant.dll" AppDescription="Quantity extraction add-in." />
 	</Components>
 </ApplicationPackage>

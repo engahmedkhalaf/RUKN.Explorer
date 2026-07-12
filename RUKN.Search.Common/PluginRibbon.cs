@@ -23,14 +23,6 @@ namespace Rukn.Navisworks.Plugin.Common
             string pluginFileName = directoryName + $"\\{Assembly.GetExecutingAssembly().GetName().Name}.dll";
             Autodesk.Navisworks.Api.Application.Plugins.AddPluginAssembly(pluginFileName);
 
-            // Dynamically load the RUKN.Quant assembly if it exists in the sibling directory
-            string parentDir = Path.GetDirectoryName(directoryName);
-            string quantPluginFileName = string.IsNullOrEmpty(parentDir) ? "" : Path.Combine(parentDir, "RUKN.Quant", "RUKN.Quant.dll");
-            if (!string.IsNullOrEmpty(quantPluginFileName) && File.Exists(quantPluginFileName))
-            {
-                Autodesk.Navisworks.Api.Application.Plugins.AddPluginAssembly(quantPluginFileName);
-            }
-
             switch (name)
             {
                 case "ModelProcessing":
