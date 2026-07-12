@@ -9,13 +9,13 @@ namespace RUKN.Search.Plugin.Utils
     {
         private const string Product = "insight_pro";
 
-        public static async Task<bool> ActivateLicenseAsync(string key, string email, string machineName)
+        public static async Task<(bool Success, string Message)> ActivateLicenseAsync(string key, string email, string machineName)
         {
             try
             {
                 if (key == "RUKN-INSIGHT-PRO-PAID-KEY")
                 {
-                    return true;
+                    return (true, "Bypass Key Approved");
                 }
 
                 string supabaseUrl = SettingsConfig.GetValue("SupabaseUrl");
@@ -23,8 +23,11 @@ namespace RUKN.Search.Plugin.Utils
 
                 if (string.IsNullOrEmpty(supabaseUrl) || string.IsNullOrEmpty(anonKey) || anonKey == "YOUR_SUPABASE_ANON_KEY")
                 {
-                    // Fallback to local offline validation if Supabase is not configured yet
-                    return key == "RUKN-INSIGHT-PRO-PAID-KEY";
+                    if (key == "RUKN-INSIGHT-PRO-PAID-KEY")
+                    {
+                        return (true, "Bypass Key Approved");
+                    }
+                    return (false, "Supabase credentials are not configured in your 'ruknbim.config' file yet.");
                 }
 
                 using (var client = new HttpClient())
@@ -36,16 +39,27 @@ namespace RUKN.Search.Plugin.Utils
 
                     // 1. Query table 'licenses' to see if key exists, is valid, and matches this product
                     string queryUrl = $"{supabaseUrl}/rest/v1/licenses?key=eq.{key}&product=eq.{Product}&select=*";
-                    var response = await client.GetAsync(queryUrl);
+                    
+                    HttpResponseMessage response;
+                    try
+                    {
+                        response = await client.GetAsync(queryUrl);
+                    }
+                    catch (Exception ex)
+                    {
+                        return (false, $"Network connection failed: {ex.Message}");
+                    }
+
                     if (!response.IsSuccessStatusCode)
                     {
-                        return false;
+                        string errContent = await response.Content.ReadAsStringAsync();
+                        return (false, $"Database query returned error ({response.StatusCode}): {errContent}");
                     }
 
                     string json = await response.Content.ReadAsStringAsync();
                     if (string.IsNullOrEmpty(json) || json == "[]")
                     {
-                        return false; // Key not found or doesn't match product in DB
+                        return (false, $"License key was not found in database for product '{Product}'.");
                     }
 
                     // 2. Register/activate the key on this machine
@@ -57,14 +71,28 @@ namespace RUKN.Search.Plugin.Utils
                         Content = new StringContent(payload, Encoding.UTF8, "application/json")
                     };
 
-                    var patchResponse = await client.SendAsync(request);
-                    return patchResponse.IsSuccessStatusCode;
+                    HttpResponseMessage patchResponse;
+                    try
+                    {
+                        patchResponse = await client.SendAsync(request);
+                    }
+                    catch (Exception ex)
+                    {
+                        return (false, $"Network error updating registry: {ex.Message}");
+                    }
+
+                    if (!patchResponse.IsSuccessStatusCode)
+                    {
+                        string errContent = await patchResponse.Content.ReadAsStringAsync();
+                        return (false, $"Database patch returned error ({patchResponse.StatusCode}): {errContent}");
+                    }
+
+                    return (true, "Successfully activated!");
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                // Fallback to offline verification during network failures
-                return key == "RUKN-INSIGHT-PRO-PAID-KEY";
+                return (false, $"Unexpected system error: {ex.Message}");
             }
         }
     }

@@ -165,11 +165,11 @@ namespace RUKN.Search.Plugin.Windows
             StatusText.Text = "Activating Online...";
             BtnActivate.IsEnabled = false;
 
-            bool isActivated = await RUKN.Search.Plugin.Utils.SupabaseService.ActivateLicenseAsync(enteredKey, email, machineName);
+            var result = await RUKN.Search.Plugin.Utils.SupabaseService.ActivateLicenseAsync(enteredKey, email, machineName);
 
             BtnActivate.IsEnabled = true;
 
-            if (isActivated)
+            if (result.Success)
             {
                 SettingsConfig.SetValue("LicenseKey", enteredKey);
                 SettingsConfig.SetValue("LicenseEmail", email);
@@ -179,7 +179,7 @@ namespace RUKN.Search.Plugin.Windows
             }
             else
             {
-                MessageBox.Show("Invalid license key. Please check your key or contact support.", "Validation Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show($"License validation failed:\n{result.Message}", "Validation Error", MessageBoxButton.OK, MessageBoxImage.Warning);
                 LoadLicenseStatus();
             }
         }
