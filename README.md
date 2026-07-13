@@ -1,4 +1,4 @@
-# RUKN Explorer - Viewpoint by Level
+﻿# RUKN Explorer - Viewpoint by Level
 
 **RUKN Explorer - Viewpoint by Level** is a powerful Autodesk® Navisworks® add-in that allows users to automatically create clean, isolated viewpoints for each Revit Level with a slice clipping plane placed at the level's Z elevation.
 
@@ -49,9 +49,9 @@ RUKN Explorer - Viewpoint by Level is compiled and verified to work on the follo
 For developers looking to inspect or build the project:
 
 * **[RUKN.Explorer.sln](file:///d:/API%20Khalaf/Rukn.Bim.Api/WIP/NAVIS/RUKN%20Explorer/RUKN.Explorer.sln):** The Visual Studio solution file compiling the plugins.
-* **[RUKN.Search.Common/](file:///d:/API%20Khalaf/Rukn.Bim.Api/WIP/NAVIS/RUKN%20Explorer/RUKN.Search.Common):** Contains shared resources, ribbon initialization (`PluginRibbon.cs`, `PluginRibbon.xaml` localization), and the `PackageContents.xml` configuration for the Autodesk installer format.
-* **[RUKN.Search.Plugin/](file:///d:/API%20Khalaf/Rukn.Bim.Api/WIP/NAVIS/RUKN%20Explorer/RUKN.Search.Plugin):** Houses the main execution entry points, GUI dialog window code/styles (`ModelProcessingWindow.xaml`, `ModelProcessingWindow.xaml.cs`), and search/selection logic.
-* **[RUKN.Search.2024/](file:///d:/API%20Khalaf/Rukn.Bim.Api/WIP/NAVIS/RUKN%20Explorer/RUKN.Search.2024):** Visual Studio target project template for building against Navisworks 2024 SDK.
+* **[RUKN.InsightPro.Common/](file:///d:/API%20Khalaf/Rukn.Bim.Api/WIP/NAVIS/RUKN%20Explorer/RUKN.InsightPro.Common):** Contains shared resources, ribbon initialization (`PluginRibbon.cs`, `PluginRibbon.xaml` localization), and the `PackageContents.xml` configuration for the Autodesk installer format.
+* **[RUKN.InsightPro.Plugin/](file:///d:/API%20Khalaf/Rukn.Bim.Api/WIP/NAVIS/RUKN%20Explorer/RUKN.InsightPro.Plugin):** Houses the main execution entry points, GUI dialog window code/styles (`ModelProcessingWindow.xaml`, `ModelProcessingWindow.xaml.cs`), and search/selection logic.
+* **[RUKN.InsightPro.2024/](file:///d:/API%20Khalaf/Rukn.Bim.Api/WIP/NAVIS/RUKN%20Explorer/RUKN.InsightPro.2024):** Visual Studio target project template for building against Navisworks 2024 SDK.
 
 ---
 

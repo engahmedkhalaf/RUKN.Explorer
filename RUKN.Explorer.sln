@@ -3,11 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.2.32630.192
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "RUKN.Search.Common", "RUKN.Search.Common\RUKN.Search.Common.shproj", "{FE40B4F6-4656-42AF-BCF2-B168567610CD}"
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "RUKN.InsightPro.Common", "RUKN.InsightPro.Common\RUKN.InsightPro.Common.shproj", "{FE40B4F6-4656-42AF-BCF2-B168567610CD}"
 EndProject
-Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "RUKN.Search.Plugin", "RUKN.Search.Plugin\RUKN.Search.Plugin.shproj", "{90624231-A5F0-47FD-B4D4-D1A9381A4039}"
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "RUKN.InsightPro.Plugin", "RUKN.InsightPro.Plugin\RUKN.InsightPro.Plugin.shproj", "{90624231-A5F0-47FD-B4D4-D1A9381A4039}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RUKN.Search.2024", "RUKN.Search.2024\RUKN.Search.2024.csproj", "{9D01EAE5-4574-4D7A-A99A-EB8B2C21ABFD}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RUKN.InsightPro.2024", "RUKN.InsightPro.2024\RUKN.InsightPro.2024.csproj", "{9D01EAE5-4574-4D7A-A99A-EB8B2C21ABFD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -27,9 +27,9 @@ Global
 		SolutionGuid = {F3425C05-2C8D-432C-ACBC-A78C37F0655D}
 	EndGlobalSection
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
-		RUKN.Search.Common\RUKN.Search.Common.projitems*{9d01eae5-4574-4d7a-a99a-eb8b2c21abfd}*SharedItemsImports = 4
-		RUKN.Search.Common\RUKN.Search.Common.projitems*{fe40b4f6-4656-42af-bcf2-b168567610cd}*SharedItemsImports = 13
-		RUKN.Search.Plugin\RUKN.Search.Plugin.projitems*{9d01eae5-4574-4d7a-a99a-eb8b2c21abfd}*SharedItemsImports = 4
-		RUKN.Search.Plugin\RUKN.Search.Plugin.projitems*{90624231-a5f0-47fd-b4d4-d1a9381a4039}*SharedItemsImports = 13
+		RUKN.InsightPro.Common\RUKN.InsightPro.Common.projitems*{9d01eae5-4574-4d7a-a99a-eb8b2c21abfd}*SharedItemsImports = 4
+		RUKN.InsightPro.Common\RUKN.InsightPro.Common.projitems*{fe40b4f6-4656-42af-bcf2-b168567610cd}*SharedItemsImports = 13
+		RUKN.InsightPro.Plugin\RUKN.InsightPro.Plugin.projitems*{9d01eae5-4574-4d7a-a99a-eb8b2c21abfd}*SharedItemsImports = 4
+		RUKN.InsightPro.Plugin\RUKN.InsightPro.Plugin.projitems*{90624231-a5f0-47fd-b4d4-d1a9381a4039}*SharedItemsImports = 13
 	EndGlobalSection
 EndGlobal
