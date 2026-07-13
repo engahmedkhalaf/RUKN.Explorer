@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System;
 using System.Configuration;
 using System.IO;
@@ -30,7 +30,13 @@ namespace RUKN.InsightPro.Plugin
 
             // Ensure file exists with defaults
             if (!File.Exists(_configFile))
+            {
                 CreateDefaultConfig();
+            }
+            else
+            {
+                EnsureDefaultKeysExist();
+            }
         }
 
         public static string GetValue(string key)
@@ -81,19 +87,16 @@ namespace RUKN.InsightPro.Plugin
                 }
             }
         }
+
         private static Configuration OpenConfig()
         {
             var map = new ExeConfigurationFileMap { ExeConfigFilename = _configFile };
             return ConfigurationManager.OpenMappedExeConfiguration(map, ConfigurationUserLevel.None);
         }
 
-        /// <summary>
-        /// Creates leia.config with the requested default keys/values.
-        /// </summary>
-        private static void CreateDefaultConfig()
+        private static Dictionary<string, string> GetDefaultDictionary()
         {
-            // Your requested defaults (removed the duplicated "runs" key to avoid errors).
-            var defaults = new Dictionary<string, string>
+            return new Dictionary<string, string>
             {
                 { "runs",   "0"  },
                 { "version",   currentVersion  },
@@ -106,7 +109,45 @@ namespace RUKN.InsightPro.Plugin
                 { "LicenseExpiry", "" },
                 { "LicenseMachine", "" }
             };
+        }
 
+        private static void EnsureDefaultKeysExist()
+        {
+            try
+            {
+                var defaults = GetDefaultDictionary();
+                bool modified = false;
+
+                lock (_locker)
+                {
+                    Configuration config = OpenConfig();
+                    KeyValueConfigurationCollection settings = config.AppSettings.Settings;
+
+                    foreach (var kvp in defaults)
+                    {
+                        if (settings[kvp.Key] == null)
+                        {
+                            settings.Add(kvp.Key, kvp.Value);
+                            modified = true;
+                        }
+                    }
+
+                    if (modified)
+                    {
+                        config.Save(ConfigurationSaveMode.Modified);
+                        ConfigurationManager.RefreshSection("appSettings");
+                    }
+                }
+            }
+            catch { }
+        }
+
+        /// <summary>
+        /// Creates ruknbim.config with the requested default keys/values.
+        /// </summary>
+        private static void CreateDefaultConfig()
+        {
+            var defaults = GetDefaultDictionary();
 
             var doc = new XmlDocument();
             var decl = doc.CreateXmlDeclaration("1.0", "utf-8", null);
