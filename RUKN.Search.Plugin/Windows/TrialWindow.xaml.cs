@@ -17,7 +17,7 @@ namespace RUKN.Search.Plugin.Windows
         {
         }
 
-        private void BtnStartTrial_Click(object sender, RoutedEventArgs e)
+        private async void BtnStartTrial_Click(object sender, RoutedEventArgs e)
         {
             string email = EmailInput.Text.Trim();
             if (string.IsNullOrEmpty(email) || !email.Contains("@"))
@@ -26,10 +26,28 @@ namespace RUKN.Search.Plugin.Windows
                 return;
             }
 
-            SettingsConfig.SetValue("TrialStartDate", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+            BtnStartTrial.IsEnabled = false;
+            string machineName = System.Environment.MachineName;
+
+            // Registers the trial server-side (one per machine, enforced by the database) and
+            // returns the real start date so a local config wipe can't grant a fresh 14 days.
+            var result = await RUKN.Search.Plugin.Utils.SupabaseService.RegisterTrialAsync(email, machineName);
+            BtnStartTrial.IsEnabled = true;
+
+            if (!result.Success)
+            {
+                MessageBox.Show($"Could not start trial:\n{result.Message}", "Trial Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            SettingsConfig.SetValue("TrialStartDate", result.StartDate);
             SettingsConfig.SetValue("LicenseEmail", email);
 
-            MessageBox.Show("14-day Free Trial started successfully!", "Trial Activated", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show(
+                result.AlreadyExisted
+                    ? "This machine already has a trial on record — resuming it."
+                    : "14-day Free Trial started successfully!",
+                "Trial Activated", MessageBoxButton.OK, MessageBoxImage.Information);
             IsTrialStarted = true;
             this.DialogResult = true;
             this.Close();

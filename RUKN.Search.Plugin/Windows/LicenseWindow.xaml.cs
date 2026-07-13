@@ -192,11 +192,20 @@ namespace RUKN.Search.Plugin.Windows
             }
         }
 
-        private void BtnDeactivate_Click(object sender, RoutedEventArgs e)
+        private async void BtnDeactivate_Click(object sender, RoutedEventArgs e)
         {
             var result = MessageBox.Show("Are you sure you want to deactivate the license on this machine?", "Deactivate License", MessageBoxButton.YesNo, MessageBoxImage.Question);
             if (result == MessageBoxResult.Yes)
             {
+                string key = SettingsConfig.GetValue("LicenseKey");
+
+                // Clear the machine binding server-side too, so the key can be legitimately
+                // activated on another machine afterwards (best-effort; local state always clears).
+                if (!string.IsNullOrEmpty(key) && key != "RUKN-INSIGHT-PRO-PAID-KEY")
+                {
+                    await RUKN.Search.Plugin.Utils.SupabaseService.DeactivateLicenseAsync(key, System.Environment.MachineName);
+                }
+
                 SettingsConfig.SetValue("LicenseKey", "");
                 SettingsConfig.SetValue("LicenseEmail", "");
                 SettingsConfig.SetValue("LicenseType", "");

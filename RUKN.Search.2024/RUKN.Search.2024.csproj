@@ -70,16 +70,7 @@
   <Import Project="..\RUKN.Search.Plugin\RUKN.Search.Plugin.projitems" Label="Shared" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>mkdir "$(SolutionDir)RUKN.Explorer.bundle\Contents\dlls\2024\RUKN.Explorer\en-US"
-mkdir "$(SolutionDir)RUKN.Explorer.bundle\Contents\dlls\2024\RUKN.Explorer\Images"
-copy "$(TargetDir)*.dll" "$(SolutionDir)RUKN.Explorer.bundle\Contents\dlls\2024\RUKN.Explorer"
-copy "$(SolutionDir)RUKN.Search.Common\Images\*" "$(SolutionDir)RUKN.Explorer.bundle\Contents\dlls\2024\RUKN.Explorer\Images"
-copy "$(SolutionDir)RUKN.Search.Common\en-US\PluginRibbon.xaml" "$(SolutionDir)RUKN.Explorer.bundle\Contents\dlls\2024\RUKN.Explorer\en-US"
-copy "$(SolutionDir)RUKN.Search.Common\PackageContents.xml" "$(SolutionDir)RUKN.Explorer.bundle"
-
-if EXIST "%25APPDATA%25\Autodesk\ApplicationPlugins\RUKN.Explorer.bundle" rmdir /s /q "%25AppData%25\Autodesk\ApplicationPlugins\RUKN.Explorer.bundle"
-mkdir "%25APPDATA%25\Autodesk\ApplicationPlugins\RUKN.Explorer.bundle"
-xcopy /e /s /h /y "$(SolutionDir)RUKN.Explorer.bundle\*" "%25APPDATA%25\Autodesk\ApplicationPlugins\RUKN.Explorer.bundle"</PostBuildEvent>
+    <PostBuildEvent>powershell -ExecutionPolicy Bypass -File "$(SolutionDir)postbuild.ps1" "$(SolutionDir) " "$(TargetDir) "</PostBuildEvent>
   </PropertyGroup>
 </Project>
 
