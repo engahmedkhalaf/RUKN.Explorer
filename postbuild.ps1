@@ -1,4 +1,4 @@
-﻿param(
+param(
     [string]$SolutionDir,
     [string]$TargetDir
 )
@@ -27,7 +27,16 @@ Copy-Item -Path (Join-Path $SolutionDir "RUKN.InsightPro.Common\PackageContents.
 $appDataPlugins = Join-Path $env:APPDATA "Autodesk\ApplicationPlugins\RUKN.Explorer.bundle"
 
 if (Test-Path $appDataPlugins) {
-    Remove-Item -Path $appDataPlugins -Recurse -Force
+    try {
+        Remove-Item -Path $appDataPlugins -Recurse -Force -ErrorAction Stop
+    } catch {
+        # If folder is locked, delete unlocked files individually and proceed
+        Get-ChildItem -Path $appDataPlugins -Recurse | ForEach-Object {
+            try {
+                Remove-Item $_.FullName -Force -ErrorAction SilentlyContinue
+            } catch {}
+        }
+    }
 }
 New-Item -ItemType Directory -Path $appDataPlugins -Force | Out-Null
 Copy-Item -Path (Join-Path $bundleDir "*") -Destination $appDataPlugins -Recurse -Force

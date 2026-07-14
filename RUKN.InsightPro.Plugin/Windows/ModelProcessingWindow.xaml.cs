@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Controls;
@@ -130,7 +130,7 @@ namespace RUKN.InsightPro.Plugin
         {
             try
             {
-                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("https://ruknbim.com") { UseShellExecute = true });
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("https://www.ruknbim.com") { UseShellExecute = true });
             }
             catch (Exception ex)
             {
@@ -193,14 +193,23 @@ namespace RUKN.InsightPro.Plugin
 
         private void GenerateViewpoints_Click(object sender, RoutedEventArgs e)
         {
-            if (ComboModel.SelectedItem == null)
+            if (ListModels.SelectedItems.Count == 0)
             {
                 TextBlockStatus.Text = "Error: No model selected.";
                 return;
             }
 
-            string selectedModel = ComboModel.SelectedItem.ToString();
-            if (selectedModel == "No models loaded")
+            var selectedModels = new System.Collections.Generic.List<string>();
+            foreach (var item in ListModels.SelectedItems)
+            {
+                string modelName = item.ToString();
+                if (modelName != "No models loaded")
+                {
+                    selectedModels.Add(modelName);
+                }
+            }
+
+            if (selectedModels.Count == 0)
             {
                 TextBlockStatus.Text = "Error: No models loaded.";
                 return;
@@ -222,7 +231,7 @@ namespace RUKN.InsightPro.Plugin
                 return;
             }
 
-            TextBlockStatus.Text = $"Generating {checkedLevels.Count} viewpoint(s)...";
+            TextBlockStatus.Text = $"Generating viewpoints across {selectedModels.Count} model(s)...";
 
             int generatedCount = 0;
             Autodesk.Navisworks.Api.ModelItemCollection originalSelection = null;
@@ -230,10 +239,6 @@ namespace RUKN.InsightPro.Plugin
             {
                 var doc = Autodesk.Navisworks.Api.Application.ActiveDocument;
                 string unitText = GetUnitText();
-                // Precache level elevations once with coordinate transformation to avoid slow repeated search queries in the loop
-                PrecacheLevelElevations(selectedModel);
-
-                var allElevations = GetAllLevelElevations(selectedModel);
 
                 // Save current selection to restore at the end
                 if (doc != null && doc.CurrentSelection != null && doc.CurrentSelection.SelectedItems != null)
@@ -241,92 +246,100 @@ namespace RUKN.InsightPro.Plugin
                     originalSelection = new Autodesk.Navisworks.Api.ModelItemCollection(doc.CurrentSelection.SelectedItems);
                 }
                 
-                foreach (string levelName in checkedLevels)
+                foreach (string selectedModel in selectedModels)
                 {
-                    double? elevation = GetLevelElevation(selectedModel, levelName);
-                    if (elevation.HasValue)
+                    // Precache level elevations once with coordinate transformation to avoid slow repeated search queries in the loop
+                    PrecacheLevelElevations(selectedModel);
+
+                    var allElevations = GetAllLevelElevations(selectedModel);
+
+                    foreach (string levelName in checkedLevels)
                     {
-                        double? topZ = null;
-                        double? bottomZ = null;
+                        double? elevation = GetLevelElevation(selectedModel, levelName);
+                        if (elevation.HasValue)
+                        {
+                            double? topZ = null;
+                            double? bottomZ = null;
 
-                        // 1. Calculate Bottom Z
-                        if (CheckOffsetBottom.IsChecked == true && TryParseDouble(TextOffsetBottom.Text, out double offsetBottom))
-                        {
-                            bottomZ = elevation.Value + ConvertToMeters(offsetBottom);
-                        }
-                        else
-                        {
-                            // Default: Cut exactly at the floor level
-                            bottomZ = elevation.Value;
-                        }
-
-                        // 2. Calculate Top Z
-                        if (CheckOffsetTop.IsChecked == true && TryParseDouble(TextOffsetTop.Text, out double offsetTop))
-                        {
-                            topZ = elevation.Value + ConvertToMeters(offsetTop);
-                        }
-                        else
-                        {
-                            // Default: Find the next level's elevation to slice only this floor
-                            double? nextElevation = null;
-                            foreach (double el in allElevations)
+                            // 1. Calculate Bottom Z
+                            if (CheckOffsetBottom.IsChecked == true && TryParseDouble(TextOffsetBottom.Text, out double offsetBottom))
                             {
-                                if (el > elevation.Value + 0.01)
-                                {
-                                    nextElevation = el;
-                                    break;
-                                }
-                            }
-
-                            if (nextElevation.HasValue)
-                            {
-                                topZ = nextElevation.Value;
+                                bottomZ = elevation.Value + ConvertToMeters(offsetBottom);
                             }
                             else
                             {
-                                // Top floor fallback: current elevation + 4.0 meters
-                                topZ = elevation.Value + 4.0;
+                                // Default: Cut exactly at the floor level
+                                bottomZ = elevation.Value;
                             }
-                        }
 
-                        // Apply the section cut using COM API
-                        ApplySectionCut(topZ, bottomZ);
+                            // 2. Calculate Top Z
+                            if (CheckOffsetTop.IsChecked == true && TryParseDouble(TextOffsetTop.Text, out double offsetTop))
+                            {
+                                topZ = elevation.Value + ConvertToMeters(offsetTop);
+                            }
+                            else
+                            {
+                                // Default: Find the next level's elevation to slice only this floor
+                                double? nextElevation = null;
+                                foreach (double el in allElevations)
+                                {
+                                    if (el > elevation.Value + 0.01)
+                                    {
+                                        nextElevation = el;
+                                        break;
+                                    }
+                                }
 
-                        // Select the level's ModelItem before capturing the viewpoint
-                        var levelItem = GetLevelModelItem(selectedModel, levelName);
-                        if (levelItem != null && doc != null && doc.CurrentSelection != null)
-                        {
-                            var collection = new Autodesk.Navisworks.Api.ModelItemCollection();
-                            collection.Add(levelItem);
-                            doc.CurrentSelection.CopyFrom(collection);
-                        }
+                                if (nextElevation.HasValue)
+                                {
+                                    topZ = nextElevation.Value;
+                                }
+                                else
+                                {
+                                    // Top floor fallback: current elevation + 4.0 meters
+                                    topZ = elevation.Value + 4.0;
+                                }
+                            }
 
-                        // Capture current view state into a new viewpoint
-                        Autodesk.Navisworks.Api.Viewpoint vp = doc.CurrentViewpoint.CreateCopy();
-                        
-                        // Create a SavedViewpoint
-                        Autodesk.Navisworks.Api.SavedViewpoint savedVp = new Autodesk.Navisworks.Api.SavedViewpoint(vp);
-                        
-                        // Determine display name with top/bottom offset details
-                        string displayName = $"{selectedModel} - {levelName}";
-                        var details = new System.Collections.Generic.List<string>();
-                        if (CheckOffsetTop.IsChecked == true && TryParseDouble(TextOffsetTop.Text, out double ot) && ot != 0)
-                        {
-                            details.Add($"Top Z: {(ot > 0 ? "+" : "")}{ot}{unitText}");
-                        }
-                        if (CheckOffsetBottom.IsChecked == true && TryParseDouble(TextOffsetBottom.Text, out double ob) && ob != 0)
-                        {
-                            details.Add($"Bottom Z: {(ob > 0 ? "+" : "")}{ob}{unitText}");
-                        }
-                        if (details.Count > 0)
-                        {
-                            displayName += $" ({string.Join(", ", details)})";
-                        }
-                        savedVp.DisplayName = displayName;
+                            // Apply the section cut using COM API
+                            ApplySectionCut(topZ, bottomZ);
 
-                        // Save to document
-                        doc.SavedViewpoints.AddCopy(savedVp);
-                        generatedCount++;
+                            // Select the level's ModelItem before capturing the viewpoint
+                            var levelItem = GetLevelModelItem(selectedModel, levelName);
+                            if (levelItem != null && doc != null && doc.CurrentSelection != null)
+                            {
+                                var collection = new Autodesk.Navisworks.Api.ModelItemCollection();
+                                collection.Add(levelItem);
+                                doc.CurrentSelection.CopyFrom(collection);
+                            }
+
+                            // Capture current view state into a new viewpoint
+                            Autodesk.Navisworks.Api.Viewpoint vp = doc.CurrentViewpoint.CreateCopy();
+                            
+                            // Create a SavedViewpoint
+                            Autodesk.Navisworks.Api.SavedViewpoint savedVp = new Autodesk.Navisworks.Api.SavedViewpoint(vp);
+                            
+                            // Determine display name with top/bottom offset details
+                            string displayName = $"{selectedModel} - {levelName}";
+                            var details = new System.Collections.Generic.List<string>();
+                            if (CheckOffsetTop.IsChecked == true && TryParseDouble(TextOffsetTop.Text, out double ot) && ot != 0)
+                            {
+                                details.Add($"Top Z: {(ot > 0 ? "+" : "")}{ot}{unitText}");
+                            }
+                            if (CheckOffsetBottom.IsChecked == true && TryParseDouble(TextOffsetBottom.Text, out double ob) && ob != 0)
+                            {
+                                details.Add($"Bottom Z: {(ob > 0 ? "+" : "")}{ob}{unitText}");
+                            }
+                            if (details.Count > 0)
+                            {
+                                displayName += $" ({string.Join(", ", details)})";
+                            }
+                            savedVp.DisplayName = displayName;
+
+                            // Save to document
+                            doc.SavedViewpoints.AddCopy(savedVp);
+                            generatedCount++;
+                        }
                     }
                 }
 
@@ -1078,7 +1091,7 @@ namespace RUKN.InsightPro.Plugin
 
         private void PopulateModels()
         {
-            ComboModel.Items.Clear();
+            ListModels.Items.Clear();
             try
             {
                 var doc = Autodesk.Navisworks.Api.Application.ActiveDocument;
@@ -1134,9 +1147,9 @@ namespace RUKN.InsightPro.Plugin
                     foreach (var m in modelsToLoad)
                     {
                         string cleanName = System.IO.Path.GetFileNameWithoutExtension(m);
-                        if (!ComboModel.Items.Contains(cleanName))
+                        if (!ListModels.Items.Contains(cleanName))
                         {
-                            ComboModel.Items.Add(cleanName);
+                            ListModels.Items.Add(cleanName);
                         }
                     }
                 }
@@ -1146,42 +1159,54 @@ namespace RUKN.InsightPro.Plugin
                 // Silent catch
             }
 
-            if (ComboModel.Items.Count > 0)
+            if (ListModels.Items.Count > 0)
             {
-                ComboModel.SelectedIndex = 0;
+                ListModels.SelectedIndex = 0;
             }
             else
             {
-                ComboModel.Items.Add("No models loaded");
-                ComboModel.SelectedIndex = 0;
+                ListModels.Items.Add("No models loaded");
+                ListModels.SelectedIndex = 0;
             }
         }
 
-        private void PopulateLevels(string selectedModelName)
+        private void PopulateLevels(System.Collections.Generic.List<string> selectedModelNames)
         {
             PanelLevels.Children.Clear();
-            if (string.IsNullOrEmpty(selectedModelName) || selectedModelName == "No models loaded")
+            if (selectedModelNames == null || selectedModelNames.Count == 0)
             {
                 return;
             }
 
             try
             {
-                var targetItem = FindModelItem(selectedModelName);
-                if (targetItem != null)
+                var uniqueLevels = new System.Collections.Generic.List<string>();
+                
+                foreach (string modelName in selectedModelNames)
                 {
-                    foreach (Autodesk.Navisworks.Api.ModelItem child in targetItem.Children)
+                    if (modelName == "No models loaded") continue;
+
+                    var targetItem = FindModelItem(modelName);
+                    if (targetItem != null)
                     {
-                        string levelName = child.DisplayName;
-                        if (!string.IsNullOrEmpty(levelName))
+                        foreach (Autodesk.Navisworks.Api.ModelItem child in targetItem.Children)
                         {
-                            CheckBox cb = new CheckBox();
-                            cb.Content = levelName;
-                            cb.IsChecked = true;
-                            cb.Margin = new Thickness(0, 0, 0, 8);
-                            PanelLevels.Children.Add(cb);
+                            string levelName = child.DisplayName;
+                            if (!string.IsNullOrEmpty(levelName) && !uniqueLevels.Contains(levelName))
+                            {
+                                uniqueLevels.Add(levelName);
+                            }
                         }
                     }
+                }
+
+                foreach (string levelName in uniqueLevels)
+                {
+                    CheckBox cb = new CheckBox();
+                    cb.Content = levelName;
+                    cb.IsChecked = true;
+                    cb.Margin = new Thickness(0, 0, 0, 8);
+                    PanelLevels.Children.Add(cb);
                 }
             }
             catch (Exception)
@@ -1190,56 +1215,70 @@ namespace RUKN.InsightPro.Plugin
             }
         }
 
-        private void HideUnselectedModels(string selectedModelName)
+        private void HideUnselectedModels(System.Collections.Generic.List<string> selectedModelNames)
         {
             var doc = Autodesk.Navisworks.Api.Application.ActiveDocument;
             if (doc == null) return;
 
             try
             {
-                var targetItem = FindModelItem(selectedModelName);
-                if (targetItem == null) return;
+                var targetItems = new System.Collections.Generic.List<Autodesk.Navisworks.Api.ModelItem>();
+                foreach (string name in selectedModelNames)
+                {
+                    var item = FindModelItem(name);
+                    if (item != null)
+                    {
+                        targetItems.Add(item);
+                    }
+                }
+
+                if (targetItems.Count == 0) return;
 
                 var itemsToShow = new Autodesk.Navisworks.Api.ModelItemCollection();
                 var itemsToHide = new Autodesk.Navisworks.Api.ModelItemCollection();
 
-                // 1. Get the parent structure of the target item
-                // If it is nested under an NWD/NWF container model
-                if (targetItem.Parent != null && targetItem.Parent.Parent == null)
+                var parentContainers = new System.Collections.Generic.HashSet<Autodesk.Navisworks.Api.ModelItem>();
+                foreach (var targetItem in targetItems)
                 {
-                    // Sibling child items under the NWD container
-                    foreach (var sibling in targetItem.Parent.Children)
+                    if (targetItem.Parent != null && targetItem.Parent.Parent == null)
                     {
-                        if (sibling == targetItem)
-                        {
-                            itemsToShow.Add(sibling);
-                        }
-                        else
-                        {
-                            itemsToHide.Add(sibling);
-                        }
+                        parentContainers.Add(targetItem.Parent);
                     }
                 }
-                else
+
+                if (parentContainers.Count > 0)
                 {
-                    // Normal top-level model roots
-                    foreach (Autodesk.Navisworks.Api.Model model in doc.Models)
+                    foreach (var container in parentContainers)
                     {
-                        if (model.RootItem != null)
+                        foreach (var sibling in container.Children)
                         {
-                            if (model.RootItem == targetItem)
+                            if (targetItems.Contains(sibling))
                             {
-                                itemsToShow.Add(model.RootItem);
+                                itemsToShow.Add(sibling);
                             }
                             else
                             {
-                                itemsToHide.Add(model.RootItem);
+                                itemsToHide.Add(sibling);
                             }
+                        }
+                    }
+                }
+                
+                foreach (Autodesk.Navisworks.Api.Model model in doc.Models)
+                {
+                    if (model.RootItem != null)
+                    {
+                        if (targetItems.Contains(model.RootItem))
+                        {
+                            itemsToShow.Add(model.RootItem);
+                        }
+                        else if (!parentContainers.Contains(model.RootItem))
+                        {
+                            itemsToHide.Add(model.RootItem);
                         }
                     }
                 }
 
-                // Apply hidden/visible states in Navisworks
                 if (itemsToShow.Count > 0)
                 {
                     doc.Models.SetHidden(itemsToShow, false);
@@ -1255,13 +1294,18 @@ namespace RUKN.InsightPro.Plugin
             }
         }
 
-        private void ComboModel_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void ListModels_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (ComboModel.SelectedItem != null)
+            var selectedModels = new System.Collections.Generic.List<string>();
+            foreach (var item in ListModels.SelectedItems)
             {
-                string selectedModel = ComboModel.SelectedItem.ToString();
-                PopulateLevels(selectedModel);
-                HideUnselectedModels(selectedModel);
+                selectedModels.Add(item.ToString());
+            }
+
+            if (selectedModels.Count > 0)
+            {
+                PopulateLevels(selectedModels);
+                HideUnselectedModels(selectedModels);
             }
         }
     }
